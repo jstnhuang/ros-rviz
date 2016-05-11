@@ -136,8 +136,7 @@
 
       deleteDisplay: function() {
         this.removeFromViewer();
-        // TODO(jstn): this creates an error message that messes up the dropdown menu.
-        Polymer.dom(this.parentNode).removeChild(this);
+        this.parentNode.removeChild(this);
       },
     });
   </script>
