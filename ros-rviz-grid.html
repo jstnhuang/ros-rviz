@@ -59,6 +59,11 @@
           type: String,
           value: '#cccccc',
         },
+        isShown: {
+          type: Boolean,
+          value: true,
+          observer: '_onIsShownChanged',
+        },
         lineWidth: {
           type: Number,
           value: 1,
@@ -71,24 +76,21 @@
           type: String,
           value: 'Grid',
         },
-        isShown: {
-          type: Boolean,
-          value: true,
-          observer: '_onIsShownChanged',
-        },
-        _grid: Object,
-        _viewer: Object,
+        globalOptions: Object,
         _addedToViewer: {
           type: Boolean,
           value: false,
         },
+        _grid: Object,
+        _viewer: Object,
       },
 
       observers: [
-        '_updateDisplay(cellSize, color, numCells)',
+        '_onOptionsChanged(cellSize, color, numCells)',
       ],
 
-      _updateDisplay: function(cellSize, color, numCells) {
+      _onOptionsChanged: function(cellSize, color, numCells) {
+        this.updateDisplay(this._viewer);
         this.removeFromViewer();
         var that = this;
         this._grid = new ROS3D.Grid({
@@ -100,7 +102,13 @@
         this._add();
       },
 
-      addToViewer: function(viewer, ros, tfClient) {
+      updateDisplay: function(viewer, ros, tfClient) {
+        if (!viewer) {
+          return;
+        }
+        if (this._addedToViewer) {
+          this.removeFromViewer();
+        }
         var that = this;
         this._grid = new ROS3D.Grid({
           cellSize: that.cellSize,

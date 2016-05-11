@@ -10,6 +10,7 @@
 <link rel="import" href="../ros-ros/ros-ros.html">
 <link rel="import" href="imports.html">
 <link rel="import" href="ros-rviz-grid.html">
+<link rel="import" href="ros-rviz-options.html">
 <link rel="import" href="ros-rviz-urdf.html">
 
 <!--
@@ -68,6 +69,7 @@ Example:
         height: 100%;
       }
     </style>
+    <ros-ros id="ros" ros="{{_ros}}" on-connection="_onRosConnection"></ros-ros>
     <paper-drawer-panel>
       <div drawer id="displays">
         <div id="displayHeader">
@@ -82,6 +84,7 @@ Example:
           </paper-menu-button>
         </div>
         <div id="displayList">
+          <ros-rviz-options global-options="{{globalOptions}}"></ros-rviz-options>
           <content></content>
         </div>
       </div>
@@ -95,17 +98,29 @@ Example:
       is: 'ros-rviz',
 
       properties: {
-        ros: Object, // The ROSLIB.Ros connection
-        _viewer: Object, // The ROS3D viewer
-        _tfClient: Object, // The ROSLIB.TFClient
-        _handledInitialDisplays: {
-          type: Boolean,
-          value: false,
+        globalOptions: {
+          type: Object,
+          value: function() {
+            var hostname = window.location.hostname;
+            var protocol = 'ws:';
+            if (window.location.protocol === 'https:') {
+              protocol = 'wss:';
+            }
+            var url = protocol + '//' + hostname + ':9090';
+
+            return {
+              url: url
+            };
+          }
         },
+        _ros: Object,
+        _tfClient: Object, // The ROSLIB.TFClient
+        _viewer: Object, // The ROS3D viewer
       },
 
       observers: [
-        '_processChildren(ros, _viewer)',
+        '_processChildren(_ros, _viewer)',
+        '_websocketUrlChanged(globalOptions.url)',
       ],
 
       attached: function() {
@@ -135,7 +150,7 @@ Example:
         var grid = document.createElement('ros-rviz-grid');
         var list = this.$.displayList;
         Polymer.dom(list).appendChild(grid);
-        grid.addToViewer(this._viewer);
+        grid.updateDisplay(this._viewer);
       },
 
       /**
@@ -146,7 +161,7 @@ Example:
         var urdf = document.createElement('ros-rviz-urdf');
         var list = this.$.displayList;
         Polymer.dom(list).appendChild(urdf);
-        urdf.addToViewer(this._viewer, this.ros, this._tfClient);
+        urdf.updateDisplay(this._viewer, this._ros, this._tfClient);
       },
 
       _onDisplaySelected: function() {
@@ -154,14 +169,15 @@ Example:
       },
 
       _onRosConnection: function() {
-        var that = this;
+        this._processChildren(this._ros, this._viewer);
       },
 
-      _processChildren: function(ros, _viewer) {
-        if (!this._handledInitialDisplays && ros && _viewer) {
+      _processChildren: function(_ros, _viewer) {
+        if (_ros && _viewer) {
           this._tfClient = new ROSLIB.TFClient({
-            ros: this.ros,
+            ros: this._ros,
             angularThres: 0.01,
+            fixedFrame: '/base_link',
             transThres: 0.005,
             rate: 20.0
           });
@@ -169,13 +185,16 @@ Example:
           var children = this.getEffectiveChildren();
           for (var i=0; i<children.length; ++i) {
             var child = children[i];
-            if (child.addToViewer) {
-              child.addToViewer(this._viewer, this.ros, this._tfClient);
+            if (child.updateDisplay) {
+              child.updateDisplay(this._viewer, this._ros, this._tfClient);
+              child.globalOptions = this.options;
             }
           }
-
-          this._handledInitialDisplays = true;
         }
+      },
+
+      _websocketUrlChanged: function(url) {
+        this.$.ros.connect(url);
       },
     });
   </script>

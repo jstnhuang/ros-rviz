@@ -78,14 +78,32 @@
       },
 
       observers: [
-        '_updateDisplay(param, colladaFileServer)',
+        '_onOptionsChanged(param, colladaFileServer)',
       ],
 
-      addToViewer: function(viewer, ros, tfClient) {
-        var that = this;
+      deleteDisplay: function() {
+        this.removeFromViewer();
+        this.parentNode.removeChild(this);
+      },
+
+      removeFromViewer: function() {
+        if (this._addedToViewer) {
+          this._viewer.scene.remove(this._urdf);
+          this._addedToViewer = false;
+        }
+      },
+
+      updateDisplay: function(viewer, ros, tfClient) {
+        if (!viewer || !ros || !tfClient) {
+          return;
+        }
+        if (this._addedToViewer) {
+          this.removeFromViewer();
+        }
         this._viewer = viewer;
         this._ros = ros;
         this._tfClient = tfClient;
+        var that = this;
         var getParam = new ROSLIB.Param({
           ros: ros,
           name: that.param
@@ -113,13 +131,6 @@
         }
       },
 
-      removeFromViewer: function() {
-        if (this._addedToViewer) {
-          this._viewer.scene.remove(this._urdf);
-          this._addedToViewer = false;
-        }
-      },
-
       _onIsShownChanged: function() {
         if (this.isShown) {
           this._add();
@@ -128,35 +139,8 @@
         }
       },
 
-      deleteDisplay: function() {
-        this.removeFromViewer();
-        this.parentNode.removeChild(this);
-      },
-
-      _updateDisplay: function(param, colladaFileServer) {
-        if (!this._ros) {
-          return;
-        }
-        this.removeFromViewer();
-        var that = this;
-        var getParam = new ROSLIB.Param({
-          ros: that._ros,
-          name: param
-        });
-        getParam.get(function(string) {
-          var urdfModel = new ROSLIB.UrdfModel({
-            string: string
-          });
-          var loader = ROS3D.COLLADA_LOADER_2;
-          that._urdf = new ROS3D.Urdf({
-            urdfModel: urdfModel,
-            path: colladaFileServer,
-            tfClient: that._tfClient,
-            tfPrefix: '',
-            loader: loader
-          })
-          that._add();
-        });
+      _onOptionsChanged: function(param, colladaFileServer) {
+        this.updateDisplay(this._viewer, this._ros, this._tfClient);
       },
     });
   </script>

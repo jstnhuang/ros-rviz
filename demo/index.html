@@ -5,14 +5,12 @@
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>ros-rviz Demo</title>
     <script src="../../webcomponentsjs/webcomponents-lite.min.js"></script>
-    <link rel="import" href="../../ros-ros/ros-ros.html">
     <link rel="import" href="../ros-rviz.html">
     <link rel="import" href="../ros-rviz-grid.html">
   </head>
   <body unresolved>
     <template id="t" is="dom-bind">
-      <ros-ros url="ws://localhost:9090" ros="{{ros}}" id="ros"></ros-ros>
-      <ros-rviz ros="{{ros}}">
+      <ros-rviz>
         <ros-rviz-grid num-cells="20"></ros-rviz-grid>
         <ros-rviz-urdf></ros-rviz-urdf>
       </ros-rviz>
@@ -21,16 +19,6 @@
   <script>
     var t = document.querySelector('#t');
     t.addEventListener('dom-change', function() {
-      var rosElement = t.$.ros;
-      rosElement.addEventListener('connection', function() {
-        console.log('Connected to the websocket server.');
-      });
-      rosElement.addEventListener('error', function(error) {
-        console.log('Error connecting to the websocket server:', error);
-      });
-      rosElement.addEventListener('close', function() {
-        console.log('Connection to websocket server closed.');
-      });
     });
   </script>
 </html>

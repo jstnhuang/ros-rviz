@@ -1,0 +1,64 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-styles/typography.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="imports.html">
+
+<dom-module id="ros-rviz-options">
+  <template>
+    <style include="iron-flex iron-flex-alignment">
+    <style>
+      :host {
+        padding: 0px 10px;
+        display: block;
+      }
+      h1 {
+        @apply(--paper-font-subhead);
+      }
+      paper-checkbox {
+        display: inline;
+      }
+      #header {
+        padding-left: 10px;
+      }
+      #options {
+        margin-left: 10px;
+        position: relative;
+        top: -15px;
+      }
+    </style>
+    <div id="header">
+      <h1>{{name}}</h1>
+    </div>
+    <div id="options">
+      <paper-input label="Websocket URL" value="{{globalOptions.url}}"></paper-input>
+    </div>
+  </template>
+  <script>
+    Polymer({
+      is: 'ros-rviz-options',
+
+      properties: {
+        globalOptions: {
+          type: Object,
+          notify: true,
+        },
+        name: {
+          type: String,
+          value: 'Options',
+        },
+      },
+
+      observers: [
+        '_updateGlobalOptions(globalOptions.url)',
+      ],
+
+      updateDisplay: function(viewer, ros, tfClient) {
+        // Options do not display anything.
+      },
+
+      _updateGlobalOptions: function(url) {
+        this.set('globalOptions.url', url);
+      },
+    });
+  </script>
+</dom-module>
