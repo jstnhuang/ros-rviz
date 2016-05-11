@@ -75,7 +75,7 @@ Example:
           <h1>Displays</h1>
           <paper-menu-button id="displayMenu">
             <paper-button id="addButton" class="dropdown-trigger">Add display</paper-button>
-            <paper-menu class="dropdown-content" on-tap="_closeDisplayMenu">
+            <paper-menu id="displayPaperMenu" class="dropdown-content" on-tap="_onDisplaySelected">
               <paper-item on-tap="addGrid">Grid</paper-item>
               <paper-item on-tap="addUrdf">Robot model</paper-item>
               <!--paper-item>Markers</paper-item-->
@@ -150,8 +150,8 @@ Example:
         urdf.addToViewer(this._viewer, this._ros, this._tfClient);
       },
 
-      _closeDisplayMenu: function() {
-        this.$.displayMenu.close();
+      _onDisplaySelected: function() {
+        this.$.displayPaperMenu.selected = undefined;
       },
 
       _onRosConnection: function() {
