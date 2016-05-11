@@ -11,22 +11,26 @@
   </head>
   <body unresolved>
     <template id="t" is="dom-bind">
-      <div>
-        <input type="text" id="urlInput" value="{{url}}"></input>
-      </div>
-      <div>
-        <ros-ros url="{{url}}" ros="{{ros}}"></ros-ros>
-        <ros-rviz ros="{{ros}}">
-          <ros-rviz-grid num-cells="20"></ros-rviz-grid>
-          <ros-rviz-urdf></ros-rviz-urdf>
-        </ros-rviz>
-      </div>
+      <ros-ros url="ws://localhost:9090" ros="{{ros}}" id="ros"></ros-ros>
+      <ros-rviz ros="{{ros}}">
+        <ros-rviz-grid num-cells="20"></ros-rviz-grid>
+        <ros-rviz-urdf></ros-rviz-urdf>
+      </ros-rviz>
     </template>
   </body>
   <script>
     var t = document.querySelector('#t');
     t.addEventListener('dom-change', function() {
-      t.url = 'ws://localhost:9090';
+      var rosElement = t.$.ros;
+      rosElement.addEventListener('connection', function() {
+        console.log('Connected to the websocket server.');
+      });
+      rosElement.addEventListener('error', function(error) {
+        console.log('Error connecting to the websocket server:', error);
+      });
+      rosElement.addEventListener('close', function() {
+        console.log('Connection to websocket server closed.');
+      });
     });
   </script>
 </html>
