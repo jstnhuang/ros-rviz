@@ -1,0 +1,164 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../paper-styles/typography.html">
+<link rel="import" href="../paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-icon-button/paper-icon-button.html">
+<link rel="import" href="imports.html">
+
+<dom-module id="ros-rviz-urdf">
+  <template>
+    <style include="iron-flex iron-flex-alignment">
+    <style>
+      :host {
+        padding: 0px 10px;
+        display: block;
+      }
+      h1 {
+        @apply(--paper-font-subhead);
+      }
+      paper-checkbox {
+        display: inline;
+      }
+      #header {
+        padding-left: 10px;
+      }
+      #deleteButton {
+        color: var(--paper-grey-500);
+      }
+      #deleteButton:hover {
+        color: var(--paper-red-500);
+      }
+      #options {
+        margin-left: 10px;
+        position: relative;
+        top: -15px;
+      }
+    </style>
+    <div class="layout horizontal" id="header">
+      <paper-checkbox checked="{{isShown}}"><h1>{{name}}</h1></paper-checkbox>
+      <div class="flex"></div>
+      <paper-icon-button id="deleteButton" icon="cancel" on-tap="deleteDisplay"></paper-icon-button>
+    </div>
+    <div id="options">
+      <paper-input label="Robot description topic" value="{{param}}"></paper-input>
+      <paper-input label="Collada file server" value="{{colladaFileServer}}"></paper-input>
+    </div>
+  </template>
+  <script>
+    Polymer({
+      is: 'ros-rviz-urdf',
+
+      properties: {
+        name: {
+          type: String,
+          value: 'Robot model',
+        },
+        param: {
+          type: String,
+          value: 'robot_description'
+        },
+        colladaFileServer: {
+          type: String,
+          value: 'http://resources.robotwebtools.org/'
+        },
+        isShown: {
+          type: Boolean,
+          value: true,
+          observer: '_onIsShownChanged',
+        },
+        _urdf: Object,
+        _viewer: Object,
+        _tfClient: Object,
+        _ros: Object,
+        _addedToViewer: {
+          type: Boolean,
+          value: false,
+        },
+      },
+
+      observers: [
+        '_updateDisplay(param, colladaFileServer)',
+      ],
+
+      addToViewer: function(viewer, ros, tfClient) {
+        var that = this;
+        this._viewer = viewer;
+        this._ros = ros;
+        this._tfClient = tfClient;
+        var getParam = new ROSLIB.Param({
+          ros: ros,
+          name: that.param
+        });
+        getParam.get(function(string) {
+          var urdfModel = new ROSLIB.UrdfModel({
+            string: string
+          });
+          var loader = ROS3D.COLLADA_LOADER_2;
+          that._urdf = new ROS3D.Urdf({
+            urdfModel: urdfModel,
+            path: that.colladaFileServer,
+            tfClient: tfClient,
+            tfPrefix: '',
+            loader: loader
+          })
+          that._add();
+        });
+      },
+
+      _add: function() {
+        if (this._viewer && !this._addedToViewer) {
+          this._viewer.addObject(this._urdf);
+          this._addedToViewer = true;
+        }
+      },
+
+      removeFromViewer: function() {
+        if (this._addedToViewer) {
+          this._viewer.scene.remove(this._urdf);
+          this._addedToViewer = false;
+        }
+      },
+
+      _onIsShownChanged: function() {
+        if (this.isShown) {
+          this._add();
+        } else if (!this.isShown) {
+          this.removeFromViewer();
+        }
+      },
+
+      deleteDisplay: function() {
+        this.removeFromViewer();
+        // TODO(jstn): this creates an error message that messes up the dropdown menu.
+        Polymer.dom(this.parentNode).removeChild(this);
+      },
+
+      _updateDisplay: function(param, colladaFileServer) {
+        if (!this._ros) {
+          return;
+        }
+        this.removeFromViewer();
+        var that = this;
+        var getParam = new ROSLIB.Param({
+          ros: that._ros,
+          name: param
+        });
+        getParam.get(function(string) {
+          var urdfModel = new ROSLIB.UrdfModel({
+            string: string
+          });
+          var loader = ROS3D.COLLADA_LOADER_2;
+          that._urdf = new ROS3D.Urdf({
+            urdfModel: urdfModel,
+            path: colladaFileServer,
+            tfClient: that._tfClient,
+            tfPrefix: '',
+            loader: loader
+          })
+          that._add();
+        });
+      },
+    });
+  </script>
+</dom-module>

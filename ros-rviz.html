@@ -1,0 +1,182 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../paper-menu-button/paper-menu-button.html">
+<link rel="import" href="../paper-menu/paper-menu.html">
+<link rel="import" href="../paper-drawer-panel/paper-drawer-panel.html">
+<link rel="import" href="../paper-item/paper-item.html">
+<link rel="import" href="../paper-styles/color.html">
+<link rel="import" href="../paper-styles/typography.html">
+<link rel="import" href="../ros-ros/ros-ros.html">
+<link rel="import" href="imports.html">
+<link rel="import" href="ros-rviz-grid.html">
+<link rel="import" href="ros-rviz-urdf.html">
+
+<!--
+A ROS visualization interface for the web.
+
+Example:
+
+    <ros-rviz>
+      <ros-rviz-grid num-cells="20"></ros-rviz-grid>
+      <ros-rviz-urdf></ros-rviz-urdf>
+    </ros-rviz>
+
+@demo demo/index.html
+@hero hero.svg
+-->
+
+<dom-module id="ros-rviz">
+  <template>
+    <style>
+      :host {
+        display: block;
+        @apply(--paper-font-common-base);
+      }
+      #displays {
+        background-color: var(--paper-grey-50);
+      }
+      #displays h1 {
+        @apply(--paper-font-title);
+        padding-top: 5px;
+        margin-top: 0;
+        margin-bottom: 10px;
+        margin-left: 4px; 
+      }
+      paper-button {
+        line-height: 1;
+        letter-spacing: 0;
+      }
+      #displays paper-menu-button {
+        --paper-menu-button-dropdown: {
+          cursor: pointer;
+        };
+      }
+      #displayHeader {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+        background-color: var(--paper-grey-200);
+      }
+      #addButton {
+        color: rgba(0, 0, 0, 0.87);
+        background-color: #ffc107;
+        @apply(--paper-font-button);
+        line-height: 1;
+        letter-spacing: 0;
+      }
+      #viewer {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+    <ros-ros ros="{{_ros}}" on-connection='_onRosConnection'></ros-ros>
+    <paper-drawer-panel>
+      <div drawer id="displays">
+        <div id="displayHeader">
+          <h1>Displays</h1>
+          <paper-menu-button id="displayMenu">
+            <paper-button id="addButton" class="dropdown-trigger">Add display</paper-button>
+            <paper-menu class="dropdown-content" on-tap="_closeDisplayMenu">
+              <paper-item on-tap="addGrid">Grid</paper-item>
+              <paper-item on-tap="addUrdf">Robot model</paper-item>
+              <!--paper-item>Markers</paper-item-->
+            </paper-menu>
+          </paper-menu-button>
+        </div>
+        <div id="displayList">
+          <content></content>
+        </div>
+      </div>
+      <div main id="viewer">
+      </div>
+    </paper-drawer-panel>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'ros-rviz',
+
+      properties: {
+        _ros: Object, // The ROSLIB.Ros connection
+        _viewer: Object, // The ROS3D viewer
+        _tfClient: Object, // The ROSLIB.TFClient
+        _handledInitialDisplays: {
+          type: Boolean,
+          value: false,
+        },
+      },
+
+      observers: [
+        '_processChildren(_ros, _viewer, _tfClient)',
+      ],
+
+      attached: function() {
+        var that = this;
+        var handleResize = function() {
+          var width = that.$.viewer.offsetWidth;
+          var height = that.$.viewer.offsetHeight;
+          // NOTE(jstn): changing the viewer size causes the scene to be scaled, rather
+          // than just shrinking the viewport.
+          if (!that._viewer) {
+            that._viewer = new ROS3D.Viewer({
+              divID: 'viewer',
+              width: width,
+              height: height,
+              antialias: true
+            });
+          }
+        }
+        window.setTimeout(handleResize, 100);
+      },
+
+      /**
+       * Adds a grid display to the visualization.
+       * This can be done manually through the UI.
+       */
+      addGrid: function() {
+        var grid = document.createElement('ros-rviz-grid');
+        var list = this.$.displayList;
+        Polymer.dom(list).appendChild(grid);
+        grid.addToViewer(this._viewer);
+      },
+
+      /**
+       * Adds a robot model to the visualization.
+       * This can be done manually through the UI.
+       */
+      addUrdf: function() {
+        var urdf = document.createElement('ros-rviz-urdf');
+        var list = this.$.displayList;
+        Polymer.dom(list).appendChild(urdf);
+        urdf.addToViewer(this._viewer, this._ros, this._tfClient);
+      },
+
+      _closeDisplayMenu: function() {
+        this.$.displayMenu.close();
+      },
+
+      _onRosConnection: function() {
+        var that = this;
+        this._tfClient = new ROSLIB.TFClient({
+          ros: that._ros,
+          angularThres: 0.01,
+          transThres: 0.005,
+          rate: 20.0
+        });
+      },
+
+      _processChildren: function(_ros, _viewer, _tfClient) {
+        if (!this._handledInitialDisplays && _ros && _viewer && _tfClient) {
+          var children = this.getEffectiveChildren();
+          for (var i=0; i<children.length; ++i) {
+            var child = children[i];
+            if (child.addToViewer) {
+              child.addToViewer(this._viewer, this._ros, this._tfClient);
+            }
+          }
+
+          this._handledInitialDisplays = true;
+        }
+      },
+    });
+  </script>
+</dom-module>

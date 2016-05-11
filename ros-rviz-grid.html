@@ -1,0 +1,144 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../paper-styles/typography.html">
+<link rel="import" href="../paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-icon-button/paper-icon-button.html">
+<link rel="import" href="imports.html">
+
+<dom-module id="ros-rviz-grid">
+  <template>
+    <style include="iron-flex iron-flex-alignment">
+    <style>
+      :host {
+        padding: 0px 10px;
+        display: block;
+      }
+      h1 {
+        @apply(--paper-font-subhead);
+      }
+      paper-checkbox {
+        display: inline;
+      }
+      #header {
+        padding-left: 10px;
+      }
+      #deleteButton {
+        color: var(--paper-grey-500);
+      }
+      #deleteButton:hover {
+        color: var(--paper-red-500);
+      }
+      #options {
+        margin-left: 10px;
+        position: relative;
+        top: -15px;
+      }
+    </style>
+    <div class="layout horizontal" id="header">
+      <paper-checkbox checked="{{isShown}}"><h1>{{name}}</h1></paper-checkbox>
+      <div class="flex"></div>
+      <paper-icon-button id="deleteButton" icon="cancel" on-tap="deleteDisplay"></paper-icon-button>
+    </div>
+    <div id="options">
+      <paper-input label="Cell size (m)" value="{{cellSize}}"></paper-input>
+      <paper-input label="Color" value="{{color}}"></paper-input>
+      <paper-input label="# cells per side" value="{{numCells}}"></paper-input>
+    </div>
+  </template>
+  <script>
+    Polymer({
+      is: 'ros-rviz-grid',
+
+      properties: {
+        cellSize: {
+          type: Number,
+          value: 1,
+        },
+        color: {
+          type: String,
+          value: '#cccccc',
+        },
+        lineWidth: {
+          type: Number,
+          value: 1,
+        },
+        numCells: {
+          type: Number,
+          value: 10,
+        },
+        name: {
+          type: String,
+          value: 'Grid',
+        },
+        isShown: {
+          type: Boolean,
+          value: true,
+          observer: '_onIsShownChanged',
+        },
+        _grid: Object,
+        _viewer: Object,
+        _addedToViewer: {
+          type: Boolean,
+          value: false,
+        },
+      },
+
+      observers: [
+        '_updateDisplay(cellSize, color, numCells)',
+      ],
+
+      _updateDisplay: function(cellSize, color, numCells) {
+        this.removeFromViewer();
+        var that = this;
+        this._grid = new ROS3D.Grid({
+          cellSize: cellSize,
+          color: color,
+          lineWidth: that.lineWidth,
+          num_cells: numCells,
+        });
+        this._add();
+      },
+
+      addToViewer: function(viewer, ros, tfClient) {
+        var that = this;
+        this._grid = new ROS3D.Grid({
+          cellSize: that.cellSize,
+          color: that.color,
+          lineWidth: that.lineWidth,
+          num_cells: that.numCells,
+        });
+        this._viewer = viewer;
+        this._add();
+      },
+
+      _add: function() {
+        if (this._viewer && !this._addedToViewer) {
+          this._viewer.addObject(this._grid);
+          this._addedToViewer = true;
+        }
+      },
+
+      removeFromViewer: function() {
+        if (this._addedToViewer) {
+          this._viewer.scene.remove(this._grid);
+          this._addedToViewer = false;
+        }
+      },
+
+      _onIsShownChanged: function() {
+        if (this.isShown) {
+          this._add();
+        } else if (!this.isShown) {
+          this.removeFromViewer();
+        }
+      },
+
+      deleteDisplay: function() {
+        this.removeFromViewer();
+        // TODO(jstn): this creates an error message that messes up the dropdown menu.
+        Polymer.dom(this.parentNode).removeChild(this);
+      },
+    });
+  </script>
+</dom-module>
