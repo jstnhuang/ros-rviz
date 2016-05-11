@@ -68,7 +68,6 @@ Example:
         height: 100%;
       }
     </style>
-    <ros-ros ros="{{_ros}}" on-connection='_onRosConnection'></ros-ros>
     <paper-drawer-panel>
       <div drawer id="displays">
         <div id="displayHeader">
@@ -96,7 +95,7 @@ Example:
       is: 'ros-rviz',
 
       properties: {
-        _ros: Object, // The ROSLIB.Ros connection
+        ros: Object, // The ROSLIB.Ros connection
         _viewer: Object, // The ROS3D viewer
         _tfClient: Object, // The ROSLIB.TFClient
         _handledInitialDisplays: {
@@ -106,7 +105,7 @@ Example:
       },
 
       observers: [
-        '_processChildren(_ros, _viewer, _tfClient)',
+        '_processChildren(ros, _viewer)',
       ],
 
       attached: function() {
@@ -147,7 +146,7 @@ Example:
         var urdf = document.createElement('ros-rviz-urdf');
         var list = this.$.displayList;
         Polymer.dom(list).appendChild(urdf);
-        urdf.addToViewer(this._viewer, this._ros, this._tfClient);
+        urdf.addToViewer(this._viewer, this.ros, this._tfClient);
       },
 
       _onDisplaySelected: function() {
@@ -156,21 +155,22 @@ Example:
 
       _onRosConnection: function() {
         var that = this;
-        this._tfClient = new ROSLIB.TFClient({
-          ros: that._ros,
-          angularThres: 0.01,
-          transThres: 0.005,
-          rate: 20.0
-        });
       },
 
-      _processChildren: function(_ros, _viewer, _tfClient) {
-        if (!this._handledInitialDisplays && _ros && _viewer && _tfClient) {
+      _processChildren: function(ros, _viewer) {
+        if (!this._handledInitialDisplays && ros && _viewer) {
+          this._tfClient = new ROSLIB.TFClient({
+            ros: this.ros,
+            angularThres: 0.01,
+            transThres: 0.005,
+            rate: 20.0
+          });
+
           var children = this.getEffectiveChildren();
           for (var i=0; i<children.length; ++i) {
             var child = children[i];
             if (child.addToViewer) {
-              child.addToViewer(this._viewer, this._ros, this._tfClient);
+              child.addToViewer(this._viewer, this.ros, this._tfClient);
             }
           }
 
