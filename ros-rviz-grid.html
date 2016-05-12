@@ -1,50 +1,12 @@
 <link rel="import" href="../polymer/polymer.html">
-<link rel="import" href="../iron-flex-layout/iron-flex-layout-classes.html">
-<link rel="import" href="../paper-styles/typography.html">
-<link rel="import" href="../paper-checkbox/paper-checkbox.html">
 <link rel="import" href="../paper-input/paper-input.html">
-<link rel="import" href="../paper-icon-button/paper-icon-button.html">
 <link rel="import" href="imports.html">
 
 <dom-module id="ros-rviz-grid">
   <template>
-    <style include="iron-flex iron-flex-alignment"></style>
-    <style>
-      :host {
-        padding: 0px 10px;
-        display: block;
-      }
-      h1 {
-        @apply(--paper-font-subhead);
-      }
-      paper-checkbox {
-        display: inline;
-      }
-      #header {
-        padding-left: 10px;
-      }
-      #deleteButton {
-        color: var(--paper-grey-500);
-      }
-      #deleteButton:hover {
-        color: var(--paper-red-500);
-      }
-      #options {
-        margin-left: 10px;
-        position: relative;
-        top: -15px;
-      }
-    </style>
-    <div class="layout horizontal" id="header">
-      <paper-checkbox checked="{{isShown}}"><h1>{{name}}</h1></paper-checkbox>
-      <div class="flex"></div>
-      <paper-icon-button id="deleteButton" icon="cancel" on-tap="deleteDisplay"></paper-icon-button>
-    </div>
-    <div id="options">
-      <paper-input label="Cell size (m)" value="{{cellSize}}"></paper-input>
-      <paper-input label="Color" value="{{color}}"></paper-input>
-      <paper-input label="# cells per side" value="{{numCells}}"></paper-input>
-    </div>
+    <paper-input label="Cell size (m)" value="{{cellSize}}"></paper-input>
+    <paper-input label="Color" value="{{color}}"></paper-input>
+    <paper-input label="# cells per side" value="{{numCells}}"></paper-input>
   </template>
   <script>
     Polymer({
@@ -59,28 +21,15 @@
           type: String,
           value: '#cccccc',
         },
-        isShown: {
-          type: Boolean,
-          value: true,
-          observer: '_onIsShownChanged',
-        },
-        lineWidth: {
-          type: Number,
-          value: 1,
+        name: {
+          type: String,
+          value: 'Grid',
         },
         numCells: {
           type: Number,
           value: 10,
         },
-        name: {
-          type: String,
-          value: 'Grid',
-        },
         globalOptions: Object,
-        _addedToViewer: {
-          type: Boolean,
-          value: false,
-        },
         _grid: Object,
         _viewer: Object,
       },
@@ -89,62 +38,32 @@
         '_onOptionsChanged(cellSize, color, numCells)',
       ],
 
-      _onOptionsChanged: function(cellSize, color, numCells) {
-        this.updateDisplay(this._viewer);
-        this.removeFromViewer();
-        var that = this;
-        this._grid = new ROS3D.Grid({
-          cellSize: cellSize,
-          color: color,
-          lineWidth: that.lineWidth,
-          num_cells: numCells,
-        });
-        this._add();
+      addToViewer: function() {
+        if (this._viewer) {
+          this._viewer.addObject(this._grid);
+        }
       },
 
-      updateDisplay: function(viewer, ros, tfClient) {
-        if (!viewer) {
-          return;
-        }
-        if (this._addedToViewer) {
-          this.removeFromViewer();
-        }
+      updateDisplay: function(viewer, ros, tfClient, callback) {
         var that = this;
+        this._viewer = viewer;
         this._grid = new ROS3D.Grid({
           cellSize: that.cellSize,
           color: that.color,
           lineWidth: that.lineWidth,
           num_cells: that.numCells,
         });
-        this._viewer = viewer;
-        this._add();
-      },
-
-      _add: function() {
-        if (this._viewer && !this._addedToViewer) {
-          this._viewer.addObject(this._grid);
-          this._addedToViewer = true;
-        }
+        callback && callback();
       },
 
       removeFromViewer: function() {
-        if (this._addedToViewer) {
+        if (this._viewer) {
           this._viewer.scene.remove(this._grid);
-          this._addedToViewer = false;
         }
       },
 
-      _onIsShownChanged: function() {
-        if (this.isShown) {
-          this._add();
-        } else if (!this.isShown) {
-          this.removeFromViewer();
-        }
-      },
-
-      deleteDisplay: function() {
-        this.removeFromViewer();
-        this.parentNode.removeChild(this);
+      _onOptionsChanged: function(cellSize, color, numCells) {
+        this.fire('update');
       },
     });
   </script>

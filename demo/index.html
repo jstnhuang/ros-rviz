@@ -6,7 +6,9 @@
     <title>ros-rviz Demo</title>
     <script src="../../webcomponentsjs/webcomponents-lite.min.js"></script>
     <link rel="import" href="../ros-rviz.html">
+    <link rel="import" href="../ros-rviz-display.html">
     <link rel="import" href="../ros-rviz-grid.html">
+    <link rel="import" href="../ros-rviz-urdf.html">
     <style>
       html, body {
         padding: 0;
@@ -18,8 +20,8 @@
   <body unresolved>
     <template id="t" is="dom-bind">
       <ros-rviz>
-        <ros-rviz-grid num-cells="20"></ros-rviz-grid>
-        <ros-rviz-urdf></ros-rviz-urdf>
+        <ros-rviz-display><ros-rviz-grid num-cells="20"></ros-rviz-grid></ros-rviz-display>
+        <ros-rviz-display><ros-rviz-urdf></ros-rviz-urdf></ros-rviz-display>
       </ros-rviz>
     </template>
   </body>
