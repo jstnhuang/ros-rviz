@@ -201,7 +201,7 @@ Example:
       },
 
       _processChildren: function(_ros, _viewer) {
-        if (_ros && _viewer) {
+        if (_ros && _ros.isConnected && _viewer) {
           this._tfClient = new ROSLIB.TFClient({
             ros: this._ros,
             angularThres: 0.01,
