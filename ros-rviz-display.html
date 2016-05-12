@@ -1,5 +1,7 @@
 <link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-collapse/iron-collapse.html">
 <link rel="import" href="../iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../paper-styles/color.html">
 <link rel="import" href="../paper-styles/typography.html">
 <link rel="import" href="../paper-checkbox/paper-checkbox.html">
 <link rel="import" href="../paper-input/paper-input.html">
@@ -11,7 +13,6 @@
     <style include="iron-flex iron-flex-alignment"></style>
     <style>
       :host {
-        padding: 0px 10px;
         display: block;
       }
       h1 {
@@ -21,7 +22,11 @@
         display: inline;
       }
       #header {
-        padding-left: 10px;
+        cursor: pointer;
+        padding: 0px 10px;
+      }
+      #header:hover {
+        background-color: var(--paper-grey-200);
       }
       #deleteButton {
         color: var(--paper-grey-500);
@@ -30,14 +35,12 @@
         color: var(--paper-red-500);
       }
       #options {
-        margin-left: 10px;
-        position: relative;
-        top: -15px;
+        margin: 0px 10px;
       }
     </style>
-    <div class="layout horizontal" id="header">
+    <div class="layout horizontal" id="header" on-tap="_toggleCollapse">
       <template is="dom-if" if="{{!permanent}}">
-        <paper-checkbox checked="{{isShown}}"><h1>{{name}}</h1></paper-checkbox>
+        <paper-checkbox checked="{{isShown}}" on-tap="_handleCheckbox"><h1>{{name}}</h1></paper-checkbox>
       </template>
       <template is="dom-if" if="{{permanent}}">
         <h1>{{name}}</h1>
@@ -45,9 +48,11 @@
       <div class="flex"></div>
       <paper-icon-button id="deleteButton" icon="cancel" on-tap="deleteDisplay" hidden$="{{permanent}}"></paper-icon-button>
     </div>
-    <div id="options">
-      <content></content>
-    </div>
+    <iron-collapse id="collapse">
+      <div id="options">
+        <content></content>
+      </div>
+    </iron-collapse>
   </template>
   <script>
     Polymer({
@@ -123,6 +128,10 @@
         });
       },
 
+      _handleCheckbox: function(evt) {
+        evt.stopPropagation();
+      },
+
       _onIsShownChanged: function() {
         if (this.isShown && !this._addedToViewer && this.display) {
           this.display.addToViewer();
@@ -132,6 +141,10 @@
           this._addedToViewer = false;
         }
       },
+
+      _toggleCollapse: function() {
+        this.$.collapse.toggle();
+      }
     });
   </script>
 </dom-module>
