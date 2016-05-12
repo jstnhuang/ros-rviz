@@ -83,6 +83,7 @@
         var children = this.getEffectiveChildren();
         if (children.length >= 1) {
           this.display = children[0];
+          this.display.isShown = this.isShown;
           var that = this;
           this.display.addEventListener('update', function() {
             that.updateDisplay(that._viewer, that._ros, that._tfClient);
@@ -100,6 +101,7 @@
 
       deleteDisplay: function() {
         this.display.removeFromViewer();
+        this.display.deleteDisplay();
         this.parentNode.removeChild(this);
       },
 
@@ -133,6 +135,9 @@
       },
 
       _onIsShownChanged: function() {
+        if (this.display) {
+          this.display.isShown = this.isShown;
+        }
         if (this.isShown && !this._addedToViewer && this.display) {
           this.display.addToViewer();
           this._addedToViewer = true;

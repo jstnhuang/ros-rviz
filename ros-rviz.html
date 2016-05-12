@@ -18,6 +18,7 @@
 <link rel="import" href="imports.html">
 <link rel="import" href="ros-rviz-display.html">
 <link rel="import" href="ros-rviz-grid.html">
+<link rel="import" href="ros-rviz-markers.html">
 <link rel="import" href="ros-rviz-options.html">
 <link rel="import" href="ros-rviz-urdf.html">
 
@@ -102,7 +103,7 @@ Example:
                   on-tap="_onDisplaySelected">
                 <paper-item on-tap="addGrid">Grid</paper-item>
                 <paper-item on-tap="addUrdf">Robot model</paper-item>
-                <!--paper-item>Markers</paper-item-->
+                <paper-item on-tap="addMarkers">Markers</paper-item>
               </paper-menu>
             </paper-menu-button>
           </paper-toolbar>
@@ -183,12 +184,21 @@ Example:
        */
       addGrid: function() {
         var display = document.createElement('ros-rviz-display');
-        display.setAttribute('name', 'Grid');
         var grid = document.createElement('ros-rviz-grid');
         Polymer.dom(display).appendChild(grid);
         var list = this.$.displayList;
         Polymer.dom(list).appendChild(display);
         display.updateDisplay(this._viewer);
+        display.addToViewer();
+      },
+
+      addMarkers: function() {
+        var display = document.createElement('ros-rviz-display');
+        var markers = document.createElement('ros-rviz-markers');
+        Polymer.dom(display).appendChild(markers);
+        var list = this.$.displayList;
+        Polymer.dom(list).appendChild(display);
+        display.updateDisplay(this._viewer, this._ros, this._tfClient);
         display.addToViewer();
       },
 
@@ -198,7 +208,6 @@ Example:
        */
       addUrdf: function() {
         var display = document.createElement('ros-rviz-display');
-        display.setAttribute('name', 'Grid');
         var urdf = document.createElement('ros-rviz-urdf');
         Polymer.dom(display).appendChild(urdf);
         var list = this.$.displayList;
