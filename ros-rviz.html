@@ -2,6 +2,7 @@
 <link rel="import" href="../iron-collapse/iron-collapse.html">
 <link rel="import" href="../iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="../iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="../paper-button/paper-button.html">
 <link rel="import" href="../paper-drawer-panel/paper-drawer-panel.html">
 <link rel="import" href="../paper-fab/paper-fab.html">
@@ -151,6 +152,8 @@ Example:
         },
       },
 
+      behaviors: [Polymer.IronResizableBehavior],
+
       observers: [
         '_processChildren(_ros, _viewer)',
         '_websocketUrlChanged(globalOptions.url)',
@@ -166,10 +169,12 @@ Example:
           antialias: true
         });
         var that = this;
-        window.setTimeout(this.resize, 100);
-        window.onresize = function() {
+        window.setTimeout(function() {
+          that.resize()
+        }, 100);
+        this.addEventListener('iron-resize', function() {
           that.resize();
-        }
+        });
       },
 
       /**
@@ -243,10 +248,6 @@ Example:
       _toggleDisplayList: function() {
         this.$.sidebar.toggle();
         this._sidebarOpen = !this._sidebarOpen;
-        var that = this;
-        window.setTimeout(function() {
-          that.resize();
-        }, 300);
       },
 
       _websocketUrlChanged: function(url) {
