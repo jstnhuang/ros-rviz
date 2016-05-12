@@ -75,7 +75,12 @@ Example:
       }
       #openDisplays {
         position: absolute;
+        margin: 10px;
         color: rgba(255, 255, 255, 0.87);
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+      #openDisplays:hover {
+        background-color: rgba(255, 255, 255, 0.3);
       }
     </style>
     <ros-ros id="ros" ros="{{_ros}}" on-connection="_onRosConnection"></ros-ros>
@@ -108,8 +113,10 @@ Example:
           </div>
         </paper-header-panel>
       </iron-collapse>
-      <paper-icon-button icon="menu" id="openDisplays"
-        hidden$="{{_sidebarOpen}}" on-tap="_toggleDisplayList"></paper-icon-button>
+      <paper-fab icon="menu" id="openDisplays"
+        hidden$="{{_sidebarOpen}}" on-tap="_toggleDisplayList"></paper-fab>
+      <paper-tooltip position="right" animation-delay="0"
+        for="openDisplays">Open displays</paper-tooltip>
       <div id="viewer" class="flex">
       </div>
     </div>
