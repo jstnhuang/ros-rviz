@@ -1,0 +1,83 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="imports.html">
+
+<dom-module id="ros-rviz-interactive-markers">
+  <template>
+    <paper-input label="Interactive marker topic" value="{{topic}}"></paper-input>
+    <paper-input label="Collada file server" value="{{colladaFileServer}}"></paper-input>
+  </template>
+  <script>
+    Polymer({
+      is: 'ros-rviz-interactive-markers',
+
+      properties: {
+        colladaFileServer: {
+          type: String,
+          value: 'http://resources.robotwebtools.org/'
+        },
+        name: {
+          type: String,
+          value: 'Interactive Markers',
+        },
+        topic: {
+          type: String,
+          value: '/basic_controls',
+        },
+        globalOptions: Object,
+        isShown: Boolean,
+        _client: {
+          type: Object,
+          value: null
+        },
+        _viewer: Object,
+        _ros: Object,
+        _tfClient: Object,
+      },
+
+      observers: [
+        '_onOptionsChanged(topic, colladaFileServer)',
+      ],
+
+      addToViewer: function() {
+        if (this._client) {
+          this._client.subscribe(this.topic);
+        }
+      },
+
+      updateDisplay: function(viewer, ros, tfClient, callback) {
+        var that = this;
+        this._viewer = viewer;
+        this._ros = ros;
+        this._tfClient = tfClient;
+        if (this._client) {
+          this._client.unsubscribe();
+        }
+        this._client = new ROS3D.InteractiveMarkerClient({
+          ros: this._ros,
+          tfClient: this._tfClient,
+          topic: this.topic,
+          camera: this._viewer.camera,
+          rootObject: this._viewer.selectableObjects,
+        });
+        callback && callback();
+      },
+
+      deleteDisplay: function() {
+        if (this._client) {
+          this._client.unsubscribe(); 
+        }
+      },
+
+      removeFromViewer: function() {
+        if (this._client) {
+          this._client.unsubscribe();
+        }
+      },
+
+      _onOptionsChanged: function(topic, colladaFileServer) {
+        this.fire('update');
+      },
+    });
+  </script>
+</dom-module>

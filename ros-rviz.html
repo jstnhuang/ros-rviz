@@ -103,6 +103,7 @@ Example:
                   on-tap="_onDisplaySelected">
                 <paper-item on-tap="addGrid">Grid</paper-item>
                 <paper-item on-tap="addUrdf">Robot model</paper-item>
+                <paper-item on-tap="addInteractiveMarkers">Interactive markers</paper-item>
                 <paper-item on-tap="addMarkers">Markers</paper-item>
               </paper-menu>
             </paper-menu-button>
@@ -189,6 +190,16 @@ Example:
         var list = this.$.displayList;
         Polymer.dom(list).appendChild(display);
         display.updateDisplay(this._viewer);
+        display.addToViewer();
+      },
+
+      addInteractiveMarkers: function() {
+        var display = document.createElement('ros-rviz-display');
+        var markers = document.createElement('ros-rviz-interactive-markers');
+        Polymer.dom(display).appendChild(markers);
+        var list = this.$.displayList;
+        Polymer.dom(list).appendChild(display);
+        display.updateDisplay(this._viewer, this._ros, this._tfClient);
         display.addToViewer();
       },
 
