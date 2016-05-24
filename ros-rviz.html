@@ -16,8 +16,10 @@
 <link rel="import" href="../paper-tooltip/paper-tooltip.html">
 <link rel="import" href="../ros-ros/ros-ros.html">
 <link rel="import" href="imports.html">
+<link rel="import" href="ros-rviz-depth-cloud.html">
 <link rel="import" href="ros-rviz-display.html">
 <link rel="import" href="ros-rviz-grid.html">
+<link rel="import" href="ros-rviz-interactive-markers.html">
 <link rel="import" href="ros-rviz-markers.html">
 <link rel="import" href="ros-rviz-options.html">
 <link rel="import" href="ros-rviz-urdf.html">
@@ -101,10 +103,11 @@ Example:
               <paper-fab icon="add" id="addButton" class="dropdown-trigger"></paper-fab>
               <paper-menu id="displayPaperMenu" class="dropdown-content"
                   on-tap="_onDisplaySelected">
+                <paper-item on-tap="addDepthCloud">Depth cloud</paper-item>
                 <paper-item on-tap="addGrid">Grid</paper-item>
-                <paper-item on-tap="addUrdf">Robot model</paper-item>
                 <paper-item on-tap="addInteractiveMarkers">Interactive markers</paper-item>
                 <paper-item on-tap="addMarkers">Markers</paper-item>
+                <paper-item on-tap="addUrdf">Robot model</paper-item>
               </paper-menu>
             </paper-menu-button>
           </paper-toolbar>
@@ -206,6 +209,16 @@ Example:
       addMarkers: function() {
         var display = document.createElement('ros-rviz-display');
         var markers = document.createElement('ros-rviz-markers');
+        Polymer.dom(display).appendChild(markers);
+        var list = this.$.displayList;
+        Polymer.dom(list).appendChild(display);
+        display.updateDisplay(this._viewer, this._ros, this._tfClient);
+        display.addToViewer();
+      },
+
+      addDepthCloud: function() {
+        var display = document.createElement('ros-rviz-display');
+        var markers = document.createElement('ros-rviz-depth-cloud');
         Polymer.dom(display).appendChild(markers);
         var list = this.$.displayList;
         Polymer.dom(list).appendChild(display);

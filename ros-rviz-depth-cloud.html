@@ -1,0 +1,116 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="imports.html">
+
+<!--
+  Version that takes in a color and depth image topic.
+-->
+<dom-module id="ros-rviz-depth-cloud">
+  <template>
+    <paper-input label="Depth stream URL" on-blur="_onOptionsChanged" value="{{_depthUrl}}"></paper-input>
+    <!--paper-input disabled label="Color image topic" value="{{colorTopic}}"></paper-input>
+    <paper-input disabled label="Depth image topic" value="{{depthTopic}}"></paper-input-->
+  </template>
+  <script>
+    Polymer({
+      is: 'ros-rviz-depth-cloud',
+
+      properties: {
+        colorTopic: {
+          type: String,
+          value: '/camera/rgb/image'
+        },
+        depthTopic: {
+          type: String,
+          value: '/camera/depth/image'
+        },
+        frameId: {
+          type: String,
+          value: '/head_mount_kinect_rgb_optical_frame',
+        },
+        name: {
+          type: String,
+          value: 'Point cloud',
+        },
+        globalOptions: Object,
+        isShown: Boolean,
+        _cloud: {
+          type: Object,
+          value: null
+        },
+        _viewer: Object,
+        _ros: Object,
+        _sceneNode: Object,
+        _tfClient: Object,
+        _depthUrl: {
+          type: String,
+          value: function() {
+            return 'http://' + window.location.hostname + ':9999/streams/depthcloud_encoded.webm';
+          }()
+        }
+      },
+
+      addToViewer: function() {
+        if (this._cloud) {
+          this._cloud.startStream();
+        }
+        if (this._sceneNode) {
+          this._viewer.scene.add(this._sceneNode);
+        }
+      },
+
+      updateDisplay: function(viewer, ros, tfClient, callback) {
+        var that = this;
+        this._viewer = viewer;
+        this._ros = ros;
+        this._tfClient = tfClient;
+        if (this._cloud) {
+          this._cloud.stopStream();
+        }
+        this._cloud = new ROS3D.DepthCloud({
+          url: this._depthUrl,
+          f: 525.0,
+        });
+        this._cloud.startStream();
+
+        this._sceneNode = new ROS3D.SceneNode({
+          frameID: this.frameId,
+          tfClient: this._tfClient,
+          object: this._cloud,
+        });
+
+        // TODO(jstn): I just tried this and it seemed to work.
+        // Get a real understanding of what's going wrong.
+        this._sceneNode.scale.x = 0.5;
+        this._sceneNode.scale.y = 0.5;
+        this._sceneNode.scale.z = 0.5;
+
+        this._viewer.scene.add(this._sceneNode);
+        callback && callback();
+      },
+
+      deleteDisplay: function() {
+        if (this._cloud) {
+          this._cloud.stopStream(); 
+        }
+        if (this._sceneNode) {
+          this._viewer.scene.remove(this._sceneNode);
+          delete this._sceneNode;
+        }
+      },
+
+      removeFromViewer: function() {
+        if (this._cloud) {
+          this._cloud.stopStream();
+        }
+        if (this._sceneNode) {
+          this._viewer.scene.remove(this._sceneNode);
+        }
+      },
+
+      _onOptionsChanged: function() {
+        this.fire('update');
+      },
+    });
+  </script>
+</dom-module>
