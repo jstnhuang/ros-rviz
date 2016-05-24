@@ -54,6 +54,7 @@
           this._client.unsubscribe();
         }
         this._client = new ROS3D.InteractiveMarkerClient({
+          path: this.colladaFileServer,
           ros: this._ros,
           tfClient: this._tfClient,
           topic: this.topic,
