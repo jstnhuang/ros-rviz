@@ -30,7 +30,7 @@
         },
         name: {
           type: String,
-          value: 'Point cloud',
+          value: 'Depth cloud',
         },
         globalOptions: Object,
         isShown: Boolean,
@@ -45,7 +45,7 @@
         _depthUrl: {
           type: String,
           value: function() {
-            return 'http://' + window.location.hostname + ':9999/streams/depthcloud_encoded.webm';
+            return 'http://' + window.location.hostname + ':8080/stream?topic=/depthcloud_encoded&bitrate=250000&type=vp8';
           }()
         }
       },
