@@ -7,7 +7,8 @@
     <style include="iron-flex iron-flex-alignment"></style>
     <style>
     </style>
-    <paper-input label="Websocket URL" value="{{globalOptions.url}}"></paper-input>
+    <paper-input label="Websocket URL" value="{{url}}" on-blur="_updateGlobalOptions"></paper-input>
+    <paper-input label="Web video server URL" value="{{videoServer}}" on-blur="_updateGlobalOptions"></paper-input>
   </template>
   <script>
     Polymer({
@@ -22,11 +23,17 @@
           type: String,
           value: 'Options',
         },
+
+        // We have our own copies of the global properties so we have control over
+        // when they are updated to the outside world.
+        url: String,
+        videoServer: String,
       },
 
-      observers: [
-        '_updateGlobalOptions(globalOptions.url)',
-      ],
+      attached: function() {
+        this.url = this.globalOptions.url;
+        this.videoServer = this.globalOptions.videoServer;
+      },
 
       addToViewer: function() {
         // Nothing to do.
@@ -44,8 +51,9 @@
         // Nothing to do.
       },
 
-      _updateGlobalOptions: function(url) {
-        this.set('globalOptions.url', url);
+      _updateGlobalOptions: function() {
+        this.set('globalOptions.url', this.url);
+        this.set('globalOptions.videoServer', this.videoServer);
       },
     });
   </script>

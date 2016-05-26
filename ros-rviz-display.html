@@ -130,6 +130,13 @@
         });
       },
 
+      updateGlobalOptions: function(globalOptions) {
+        this.globalOptions = globalOptions;
+        if (this.display.updateGlobalOptions) {
+          this.display.updateGlobalOptions(this.globalOptions);
+        }
+      },
+
       _handleCheckbox: function(evt) {
         evt.stopPropagation();
       },

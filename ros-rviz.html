@@ -87,7 +87,7 @@ Example:
         background-color: rgba(255, 255, 255, 0.3);
       }
     </style>
-    <ros-ros id="ros" ros="{{_ros}}" on-connection="_onRosConnection"></ros-ros>
+    <ros-ros id="ros" url="{{globalOptions.url}}" ros="{{_ros}}" on-connection="_onRosConnection"></ros-ros>
     <div id="container" class="layout horizontal">
       <iron-collapse id="sidebar" opened horizontal>
         <paper-header-panel mode="seamed" id="displays">
@@ -142,8 +142,13 @@ Example:
               protocol = 'wss:';
             }
             var url = protocol + '//' + hostname + ':9090';
+            var clientId = '' + Math.random();
+
+            var videoServer = 'http://' + hostname + ':9999';
 
             return {
+              clientId: clientId,
+              videoServer: videoServer,
               url: url
             };
           }
@@ -162,6 +167,7 @@ Example:
       observers: [
         '_processChildren(_ros, _viewer)',
         '_websocketUrlChanged(globalOptions.url)',
+        '_videoServerChanged(globalOptions.videoServer)',
       ],
 
       attached: function() {
@@ -189,6 +195,7 @@ Example:
       addGrid: function() {
         var display = document.createElement('ros-rviz-display');
         var grid = document.createElement('ros-rviz-grid');
+        grid.globalOptions = this.globalOptions;
         Polymer.dom(display).appendChild(grid);
         var list = this.$.displayList;
         Polymer.dom(list).appendChild(display);
@@ -199,6 +206,7 @@ Example:
       addInteractiveMarkers: function() {
         var display = document.createElement('ros-rviz-display');
         var markers = document.createElement('ros-rviz-interactive-markers');
+        markers.globalOptions = this.globalOptions;
         Polymer.dom(display).appendChild(markers);
         var list = this.$.displayList;
         Polymer.dom(list).appendChild(display);
@@ -209,6 +217,7 @@ Example:
       addMarkers: function() {
         var display = document.createElement('ros-rviz-display');
         var markers = document.createElement('ros-rviz-markers');
+        markers.globalOptions = this.globalOptions;
         Polymer.dom(display).appendChild(markers);
         var list = this.$.displayList;
         Polymer.dom(list).appendChild(display);
@@ -218,8 +227,10 @@ Example:
 
       addDepthCloud: function() {
         var display = document.createElement('ros-rviz-display');
-        var markers = document.createElement('ros-rviz-depth-cloud');
-        Polymer.dom(display).appendChild(markers);
+        var depthCloud = document.createElement('ros-rviz-depth-cloud');
+        depthCloud.globalOptions = this.globalOptions;
+        console.log(Polymer.dom(display).create);
+        Polymer.dom(display).appendChild(depthCloud);
         var list = this.$.displayList;
         Polymer.dom(list).appendChild(display);
         display.updateDisplay(this._viewer, this._ros, this._tfClient);
@@ -271,8 +282,8 @@ Example:
           for (var i=0; i<children.length; ++i) {
             var child = children[i];
             if (child.updateDisplay) {
+              child.updateGlobalOptions(this.globalOptions);
               child.updateDisplay(this._viewer, this._ros, this._tfClient);
-              child.globalOptions = this.globalOptions;
             }
           }
         }
@@ -281,6 +292,10 @@ Example:
       _toggleDisplayList: function() {
         this.$.sidebar.toggle();
         this._sidebarOpen = !this._sidebarOpen;
+      },
+
+      _videoServerChanged: function() {
+        this._processChildren(this._ros, this._viewer);
       },
 
       _websocketUrlChanged: function(url) {

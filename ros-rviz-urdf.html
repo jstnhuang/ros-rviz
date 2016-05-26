@@ -24,6 +24,12 @@
           type: String,
           value: 'http://resources.robotwebtools.org/'
         },
+        globalOptions: {
+          type: Object,
+          value: function() {
+            return {};
+          },
+        },
         _urdf: Object,
         _viewer: Object,
         _tfClient: Object,

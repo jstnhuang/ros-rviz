@@ -29,7 +29,12 @@
           type: Number,
           value: 10,
         },
-        globalOptions: Object,
+        globalOptions: {
+          type: Object,
+          value: function() {
+            return {};
+          },
+        },
         _grid: Object,
         _viewer: Object,
       },

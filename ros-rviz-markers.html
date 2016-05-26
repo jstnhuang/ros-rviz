@@ -24,7 +24,12 @@
           type: String,
           value: '/visualization_marker',
         },
-        globalOptions: Object,
+        globalOptions: {
+          type: Object,
+          value: function() {
+            return {};
+          },
+        },
         isShown: Boolean,
         _markers: {
           type: Object, // {ns+id -- Marker}

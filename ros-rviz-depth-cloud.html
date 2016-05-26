@@ -1,5 +1,6 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../ros-service/ros-service.html">
 <link rel="import" href="imports.html">
 
 <!--
@@ -7,9 +8,23 @@
 -->
 <dom-module id="ros-rviz-depth-cloud">
   <template>
-    <paper-input label="Depth stream URL" on-blur="_onOptionsChanged" value="{{_depthUrl}}"></paper-input>
-    <!--paper-input disabled label="Color image topic" value="{{colorTopic}}"></paper-input>
-    <paper-input disabled label="Depth image topic" value="{{depthTopic}}"></paper-input-->
+    <ros-service
+     id="startDepthService"
+     on-response="_onDepthStart"
+     name="/start_depth_cloud"
+     ros="{{_ros}}"
+     service-type="rws_rviz/StartDepthService"
+    ></ros-service>
+    <ros-service
+     id="stopDepthService"
+     name="/stop_depth_cloud"
+     ros="{{_ros}}"
+     service-type="rws_rviz/StopDepthService"
+    ></ros-service>
+    <!--paper-input label="Depth stream URL" on-blur="_onOptionsChanged" value="{{_depthUrl}}"></paper-input-->
+    <paper-input label="Color image topic" value="{{colorTopic}}" on-blur="_onOptionsChanged"></paper-input>
+    <paper-input label="Depth image topic" value="{{depthTopic}}" on-blur="_onOptionsChanged"></paper-input>
+    <paper-input label="Camera frame ID" value="{{frameId}}" on-blur="_onOptionsChanged"></paper-input>
   </template>
   <script>
     Polymer({
@@ -18,11 +33,11 @@
       properties: {
         colorTopic: {
           type: String,
-          value: '/camera/rgb/image'
+          value: '/head_mount_kinect/rgb/image_rect_color'
         },
         depthTopic: {
           type: String,
-          value: '/camera/depth/image'
+          value: '/head_mount_kinect/depth_registered/image_raw'
         },
         frameId: {
           type: String,
@@ -32,23 +47,30 @@
           type: String,
           value: 'Depth cloud',
         },
-        globalOptions: Object,
+        globalOptions: {
+          type: Object,
+          value: function() {
+            return {};
+          },
+        },
         isShown: Boolean,
         _cloud: {
           type: Object,
           value: null
         },
+        _oldColorTopic: String,
+        _oldDepthTopic: String,
         _viewer: Object,
         _ros: Object,
         _sceneNode: Object,
         _tfClient: Object,
-        _depthUrl: {
-          type: String,
-          value: function() {
-            return 'http://' + window.location.hostname + ':9999/streams/depthcloud_encoded.webm?&enc=webm&bitrate=250000&framerate=15';
-          }()
-        }
+        _depthUrl: String,
+        _depthUrlTopic: String, // Backend image topic to stream.
       },
+
+      observers: [
+        '_computeDepthUrl(_depthUrlTopic)',
+      ],
 
       addToViewer: function() {
         if (this._cloud) {
@@ -59,6 +81,14 @@
         }
       },
 
+      attached: function() {
+        this._updateStream();
+        var that = this;
+        window.addEventListener('beforeunload', function(evt) {
+          that._endStream();
+        });
+      },
+
       updateDisplay: function(viewer, ros, tfClient, callback) {
         var that = this;
         this._viewer = viewer;
@@ -66,6 +96,9 @@
         this._tfClient = tfClient;
         if (this._cloud) {
           this._cloud.stopStream();
+        }
+        if (!this._depthUrl) {
+          return;
         }
         this._cloud = new ROS3D.DepthCloud({
           url: this._depthUrl,
@@ -93,6 +126,7 @@
         if (this._cloud) {
           this._cloud.stopStream(); 
         }
+        this._endStream();
         if (this._sceneNode) {
           this._viewer.scene.remove(this._sceneNode);
           delete this._sceneNode;
@@ -108,8 +142,48 @@
         }
       },
 
-      _onOptionsChanged: function() {
+      updateGlobalOptions: function(globalOptions) {
+        //this.globalOptions = globalOptions;
+        //this._updateStream();
+      },
+
+      _computeDepthUrl: function(_depthUrlTopic) {
+        var url = this.globalOptions.videoServer + '/streams' + _depthUrlTopic + '.webm?enc=webm&bitrate=250000&framerate=15';
+        this._depthUrl = url;
         this.fire('update');
+      },
+
+      _onDepthStart: function(evt) {
+        this._depthUrlTopic = evt.detail.topic;
+        this._computeDepthUrl(this._depthUrlTopic);
+      },
+
+      _onOptionsChanged: function() {
+        this._updateStream();
+      },
+
+      _updateStream: function() {
+        this._endStream(); 
+        if (!this.colorTopic || !this.depthTopic) {
+          return;
+        }
+        this._oldColorTopic = this.colorTopic;
+        this._oldDepthTopic = this.depthTopic;
+        this.$.startDepthService.call({
+          depth_topic: this.depthTopic,
+          rgb_topic: this.colorTopic,
+          client_id: this.globalOptions.clientId
+        });
+      },
+
+      _endStream: function() {
+        if (this._oldColorTopic && this._oldDepthTopic) {
+          this.$.stopDepthService.call({
+            depth_topic: this._oldDepthTopic,
+            rgb_topic: this._oldColorTopic,
+            client_id: this.globalOptions.clientId
+          });
+        }
       },
     });
   </script>
