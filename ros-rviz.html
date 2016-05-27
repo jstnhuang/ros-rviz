@@ -86,6 +86,11 @@ Example:
       #openDisplays:hover {
         background-color: rgba(255, 255, 255, 0.3);
       }
+      paper-item {
+        --paper-item: {
+          cursor: pointer;
+        };
+      }
     </style>
     <ros-ros id="ros" url="{{globalOptions.url}}" ros="{{_ros}}" on-connection="_onRosConnection"></ros-ros>
     <div id="container" class="layout horizontal">
