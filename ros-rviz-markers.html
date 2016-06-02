@@ -4,65 +4,65 @@
 
 <dom-module id="ros-rviz-markers">
   <template>
-    <paper-input label="Marker topic" value="{{topic}}"></paper-input>
-    <paper-input label="Collada file server" value="{{colladaFileServer}}"></paper-input>
+    <paper-input label="Marker topic" on-blur="_updateDisplay" value="{{topic}}"></paper-input>
   </template>
   <script>
     Polymer({
       is: 'ros-rviz-markers',
 
       properties: {
-        colladaFileServer: {
-          type: String,
-          value: 'http://resources.robotwebtools.org/'
-        },
+        globalOptions: Object,
+        isShown: Boolean,
         name: {
           type: String,
           value: 'Markers',
         },
+        ros: Object,
+        tfClient: Object,
         topic: {
           type: String,
           value: '/visualization_marker',
         },
-        globalOptions: {
-          type: Object,
-          value: function() {
-            return {};
-          },
-        },
-        isShown: Boolean,
+        viewer: Object,
         _markers: {
           type: Object, // {ns+id -- Marker}
           value: function() { return {}; }
         },
-        _viewer: Object,
-        _ros: Object,
-        _tfClient: Object,
         _topic: Object,
       },
 
-      observers: [
-        '_onOptionsChanged(topic, colladaFileServer)',
-      ],
+      ready: function() {
+        this._updateDisplay();
+        this.show();
+      },
 
-      addToViewer: function() {
-        if (this._viewer) {
+      destroy: function() {
+        this._topic.unsubscribe(); 
+      },
+
+      hide: function() {
+        if (this.viewer) {
           for (var i in this._markers) {
-            this._viewer.addObject(this._markers[i]);
+            this.viewer.scene.remove(this._markers[i]);
           }
         }
       },
 
-      updateDisplay: function(viewer, ros, tfClient, callback) {
+      show: function() {
+        if (this.viewer) {
+          for (var i in this._markers) {
+            this.viewer.addObject(this._markers[i]);
+          }
+        }
+      },
+
+      _updateDisplay: function() {
         var that = this;
-        this._viewer = viewer;
-        this._ros = ros;
-        this._tfClient = tfClient;
         if (this._topic) {
           this._topic.unsubscribe();
         }
         this._topic = new ROSLIB.Topic({
-          ros: this._ros,
+          ros: this.ros,
           name: this.topic,
           messageType: 'visualization_msgs/Marker',
           compression: 'png'
@@ -70,45 +70,38 @@
         this._topic.subscribe(function(message) {
           that._msgCallback(that, message);
         });
-        callback && callback();
-      },
-
-      deleteDisplay: function() {
-        this._topic.unsubscribe(); 
-      },
-
-      removeFromViewer: function() {
-        if (this._viewer) {
-          for (var i in this._markers) {
-            this._viewer.scene.remove(this._markers[i]);
-          }
-        }
       },
 
       _msgCallback: function(that, message) {
+        var loader = ROS3D.COLLADA_LOADER_2;
+        if (that.globalOptions.colladaLoader === 'collada') {
+          loader = ROS3D.COLLADA_LOADER;
+        } else if (that.globalOptions.colladaLoader === 'collada2') {
+          loader = ROS3D.COLLADA_LOADER_2;
+        } else {
+          console.warn('Unknown Collada loader', that.globalOptions.colladaLoader);
+          loader = ROS3D.COLLADA_LOADER_2;
+        }
+
         var newMarker = new ROS3D.Marker({
           message: message,
-          path: that.colladaFileServer,
-          loader: ROS3D.COLLADA_LOADER_2
+          path: that.globalOptions.colladaServer,
+          loader: loader
         });
 
         var oldNode = that._markers[message.ns + message.id];
         if (oldNode) {
-          that._viewer.scene.remove(oldNode);
+          that.viewer.scene.remove(oldNode);
         }
 
         that._markers[message.ns + message.id] = new ROS3D.SceneNode({
           frameID: message.header.frame_id,
-          tfClient: that._tfClient,
+          tfClient: that.tfClient,
           object: newMarker
         });
         if (that.isShown) {
-          that._viewer.addObject(that._markers[message.ns + message.id]);
+          that.viewer.addObject(that._markers[message.ns + message.id]);
         }
-      },
-
-      _onOptionsChanged: function(topic, colladaFileServer) {
-        this.fire('update');
       },
     });
   </script>

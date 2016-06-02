@@ -236,6 +236,15 @@ Example:
       },
 
       addMarkers: function() {
+        this.push('displays', {
+          internal: {
+            viewer: this._viewer,
+            ros: this.ros,
+            tfClient: this.tfClient,
+          },
+          name: 'Markers',
+          type: 'markers',
+        });
       },
 
       addDepthCloud: function() {

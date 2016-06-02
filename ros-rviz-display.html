@@ -80,6 +80,16 @@
           viewer="{{internal.viewer}}"
         ></ros-rviz-interactive-markers>
       </template>
+      <template is="dom-if" if="{{_typeIs('markers', type)}}">
+        <ros-rviz-markers id="display"
+          global-options="{{globalOptions}}"
+          is-shown="{{isShown}}"
+          ros="{{internal.ros}}"
+          tf-client="{{internal.tfClient}}"
+          topic="{{options.topic}}"
+          viewer="{{internal.viewer}}"
+        ></ros-rviz-markers>
+      </template>
       <template is="dom-if" if="{{_typeIs('urdf', type)}}">
         <ros-rviz-urdf id="display"
           global-options="{{globalOptions}}"
