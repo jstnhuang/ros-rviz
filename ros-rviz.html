@@ -14,24 +14,16 @@
 <link rel="import" href="../paper-styles/typography.html">
 <link rel="import" href="../paper-toolbar/paper-toolbar.html">
 <link rel="import" href="../paper-tooltip/paper-tooltip.html">
-<link rel="import" href="../ros-ros/ros-ros.html">
 <link rel="import" href="imports.html">
-<link rel="import" href="ros-rviz-depth-cloud.html">
 <link rel="import" href="ros-rviz-display.html">
-<link rel="import" href="ros-rviz-grid.html">
-<link rel="import" href="ros-rviz-interactive-markers.html">
-<link rel="import" href="ros-rviz-markers.html">
-<link rel="import" href="ros-rviz-options.html">
-<link rel="import" href="ros-rviz-urdf.html">
 
 <!--
 A ROS visualization interface for the web.
 
 Example:
 
-    <ros-rviz>
-      <ros-rviz-display><ros-rviz-grid num-cells="20"></ros-rviz-grid></ros-rviz-display>
-      <ros-rviz-display><ros-rviz-urdf></ros-rviz-urdf></ros-rviz-display>
+    <ros-websocket url="{{websocketUrl}}" ros="{{ros}}"></ros-websocket>
+    <ros-rviz websocket-url="{{websocketUrl}}" ros="{{ros}}">
     </ros-rviz>
 
 @demo demo/index.html
@@ -92,7 +84,6 @@ Example:
         };
       }
     </style>
-    <ros-ros id="ros" url="{{globalOptions.url}}" ros="{{_ros}}" on-connection="_onRosConnection"></ros-ros>
     <div id="container" class="layout horizontal">
       <iron-collapse id="sidebar" opened horizontal>
         <paper-header-panel mode="seamed" id="displays">
@@ -117,9 +108,21 @@ Example:
             </paper-menu-button>
           </paper-toolbar>
           <div id="displayList" class="fit">
-            <ros-rviz-display permanent>
-              <ros-rviz-options global-options="{{globalOptions}}"></ros-rviz-options>
-            </ros-rviz-display>
+            <ros-rviz-display
+              global-options="{{globalOptions}}"
+              name="Global options"
+              permanent
+              type="globalOptions"
+            ></ros-rviz-display>
+            <template is="dom-repeat" items="{{displays}}" as="display">
+              <ros-rviz-display
+                global-options="{{globalOptions}}"
+                internal="{{display.internal}}"
+                name="{{display.name}}"
+                options="{{display.options}}"
+                type="{{display.type}}"
+              ></ros-rviz-display>
+            </template>
             <content></content>
           </div>
         </paper-header-panel>
@@ -141,25 +144,44 @@ Example:
         globalOptions: {
           type: Object,
           value: function() {
-            var hostname = window.location.hostname;
-            var protocol = 'ws:';
-            if (window.location.protocol === 'https:') {
-              protocol = 'wss:';
-            }
-            var url = protocol + '//' + hostname + ':9090';
-            var clientId = '' + Math.random();
-
-            var videoServer = 'http://' + hostname + ':9999';
-
-            return {
-              clientId: clientId,
-              videoServer: videoServer,
-              url: url
-            };
-          }
+            return {};
+          },
         },
-        _ros: Object,
-        _tfClient: Object, // The ROSLIB.TFClient
+
+        /**
+         * JavaScript representation of the display list.
+         * The format of the array is:
+         * ```
+         * [
+         *   {
+         *     isPermanent: true,
+         *     type: 'globalOptions',
+         *     name: 'Global Options',
+         *     options: {
+         *      websocketUrl: 'ws://localhost:9090'
+         *     },
+         *   }, {
+         *     type: 'grid',
+         *   }
+         * ]
+         * ```
+         */
+        displays: {
+          type: Array,
+          value: function() {
+            return [];
+          },
+        },
+        ros: {
+          type: Object,
+          observer: '_rosChanged',
+        },
+        tfClient: Object, // The ROSLIB.TFClient
+        websocketUrl: {
+          type: String,
+          notify: true,
+          computed: '_computeWebsocketUrl(globalOptions.url)',
+        },
         _viewer: Object, // The ROS3D viewer
         _sidebarOpen: {
           type: Boolean,
@@ -168,12 +190,6 @@ Example:
       },
 
       behaviors: [Polymer.IronResizableBehavior],
-
-      observers: [
-        '_processChildren(_ros, _viewer)',
-        '_websocketUrlChanged(globalOptions.url)',
-        '_videoServerChanged(globalOptions.videoServer)',
-      ],
 
       attached: function() {
         var width = this.$.viewer.offsetWidth;
@@ -198,48 +214,47 @@ Example:
        * This can be done manually through the UI.
        */
       addGrid: function() {
-        var display = document.createElement('ros-rviz-display');
-        var grid = document.createElement('ros-rviz-grid');
-        grid.globalOptions = this.globalOptions;
-        Polymer.dom(display).appendChild(grid);
-        var list = this.$.displayList;
-        Polymer.dom(list).appendChild(display);
-        display.updateDisplay(this._viewer);
-        display.addToViewer();
+        this.push('displays', {
+          internal: {
+            viewer: this._viewer,
+          },
+          name: 'Grid',
+          type: 'grid',
+        });
       },
 
       addInteractiveMarkers: function() {
-        var display = document.createElement('ros-rviz-display');
-        var markers = document.createElement('ros-rviz-interactive-markers');
-        markers.globalOptions = this.globalOptions;
-        Polymer.dom(display).appendChild(markers);
-        var list = this.$.displayList;
-        Polymer.dom(list).appendChild(display);
-        display.updateDisplay(this._viewer, this._ros, this._tfClient);
-        display.addToViewer();
+        //var display = document.createElement('ros-rviz-display');
+        //var markers = document.createElement('ros-rviz-interactive-markers');
+        //markers.globalOptions = this.globalOptions;
+        //Polymer.dom(display).appendChild(markers);
+        //var list = this.$.displayList;
+        //Polymer.dom(list).appendChild(display);
+        //display.updateDisplay(this.viewer, this.ros, this.tfClient);
+        //display.addToViewer();
       },
 
       addMarkers: function() {
-        var display = document.createElement('ros-rviz-display');
-        var markers = document.createElement('ros-rviz-markers');
-        markers.globalOptions = this.globalOptions;
-        Polymer.dom(display).appendChild(markers);
-        var list = this.$.displayList;
-        Polymer.dom(list).appendChild(display);
-        display.updateDisplay(this._viewer, this._ros, this._tfClient);
-        display.addToViewer();
+        //var display = document.createElement('ros-rviz-display');
+        //var markers = document.createElement('ros-rviz-markers');
+        //markers.globalOptions = this.globalOptions;
+        //Polymer.dom(display).appendChild(markers);
+        //var list = this.$.displayList;
+        //Polymer.dom(list).appendChild(display);
+        //display.updateDisplay(this.viewer, this.ros, this.tfClient);
+        //display.addToViewer();
       },
 
       addDepthCloud: function() {
-        var display = document.createElement('ros-rviz-display');
-        var depthCloud = document.createElement('ros-rviz-depth-cloud');
-        depthCloud.globalOptions = this.globalOptions;
-        console.log(Polymer.dom(display).create);
-        Polymer.dom(display).appendChild(depthCloud);
-        var list = this.$.displayList;
-        Polymer.dom(list).appendChild(display);
-        display.updateDisplay(this._viewer, this._ros, this._tfClient);
-        display.addToViewer();
+        //var display = document.createElement('ros-rviz-display');
+        //var depthCloud = document.createElement('ros-rviz-depth-cloud');
+        //depthCloud.globalOptions = this.globalOptions;
+        //console.log(Polymer.dom(display).create);
+        //Polymer.dom(display).appendChild(depthCloud);
+        //var list = this.$.displayList;
+        //Polymer.dom(list).appendChild(display);
+        //display.updateDisplay(this.viewer, this.ros, this.tfClient);
+        //display.addToViewer();
       },
 
       /**
@@ -247,13 +262,15 @@ Example:
        * This can be done manually through the UI.
        */
       addUrdf: function() {
-        var display = document.createElement('ros-rviz-display');
-        var urdf = document.createElement('ros-rviz-urdf');
-        Polymer.dom(display).appendChild(urdf);
-        var list = this.$.displayList;
-        Polymer.dom(list).appendChild(display);
-        display.updateDisplay(this._viewer, this._ros, this._tfClient);
-        display.addToViewer();
+        this.push('displays', {
+          internal: {
+            viewer: this._viewer,
+            ros: this.ros,
+            tfClient: this.tfClient,
+          },
+          name: 'Robot model',
+          type: 'urdf',
+        });
       },
 
       resize: function() {
@@ -264,49 +281,28 @@ Example:
         }
       },
 
+      _computeWebsocketUrl: function(url) {
+        return url;
+      },
+
       _onDisplaySelected: function() {
         this.$.displayPaperMenu.selected = undefined;
       },
 
-      _onRosConnection: function() {
-        this._processChildren(this._ros, this._viewer);
-      },
-
-      _processChildren: function(_ros, _viewer) {
-        if (_ros && _ros.isConnected && _viewer) {
-          this._tfClient = new ROSLIB.TFClient({
-            ros: this._ros,
-            angularThres: 0.01,
-            fixedFrame: '/base_link',
-            transThres: 0.005,
-            rate: 20.0
-          });
-
-          var list = this.$.displayList;
-          var children = list.children;
-          for (var i=0; i<children.length; ++i) {
-            var child = children[i];
-            if (child.updateDisplay) {
-              child.updateGlobalOptions(this.globalOptions);
-              child.updateDisplay(this._viewer, this._ros, this._tfClient);
-            }
-          }
-        }
+      _rosChanged: function() {
+        this.tfClient = new ROSLIB.TFClient({
+          ros: this.ros,
+          angularThres: 0.01,
+          fixedFrame: '/base_link',
+          transThres: 0.005,
+          rate: 20.0
+        });
+        console.log('ros changed, updating tf client');
       },
 
       _toggleDisplayList: function() {
         this.$.sidebar.toggle();
         this._sidebarOpen = !this._sidebarOpen;
-      },
-
-      _videoServerChanged: function() {
-        this._processChildren(this._ros, this._viewer);
-      },
-
-      _websocketUrlChanged: function(url) {
-        if (this._ros) {
-          this.$.ros.connect(url);
-        }
       },
     });
   </script>

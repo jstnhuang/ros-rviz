@@ -5,7 +5,6 @@
 <dom-module id="ros-rviz-urdf">
   <template>
     <paper-input label="Robot description topic" value="{{param}}"></paper-input>
-    <paper-input label="Collada file server" value="{{colladaFileServer}}"></paper-input>
   </template>
   <script>
     Polymer({
@@ -20,72 +19,69 @@
           type: String,
           value: 'robot_description'
         },
-        colladaFileServer: {
-          type: String,
-          value: 'http://resources.robotwebtools.org/'
-        },
-        globalOptions: {
-          type: Object,
-          value: function() {
-            return {};
-          },
-        },
+        globalOptions: Object,
+        ros: Object,
+        tfClient: Object,
+        viewer: Object,
         _urdf: Object,
-        _viewer: Object,
-        _tfClient: Object,
-        _ros: Object,
       },
 
-      observers: [
-        '_onOptionsChanged(param, colladaFileServer)',
-      ],
+      ready: function() {
+        var that = this;
+        this._updateDisplay(function() {
+          that.show();
+        });
+      },
 
-      addToViewer: function() {
-        if (this._viewer) {
-          this._viewer.addObject(this._urdf);
+      destroy: function() {
+        // Nothing to destroy.
+      },
+
+      hide: function() {
+        if (this.viewer) {
+          this.viewer.scene.remove(this._urdf);
         }
       },
 
-      deleteDisplay: function() {
-        // Nothing to delete.
+      show: function() {
+        if (this.viewer) {
+          this.viewer.addObject(this._urdf);
+        }
       },
 
-      updateDisplay: function(viewer, ros, tfClient, callback) {
-        if (!viewer || !ros || !tfClient) {
+      _updateDisplay: function(callback) {
+        if (!(this.ros && this.tfClient && this.param
+              && this.globalOptions.colladaLoader
+              && this.globalOptions.colladaServer)) {
           return;
         }
-        this._viewer = viewer;
-        this._ros = ros;
-        this._tfClient = tfClient;
-        var that = this;
         var getParam = new ROSLIB.Param({
-          ros: ros,
-          name: that.param
+          ros: this.ros,
+          name: this.param
         });
+        var that = this;
         getParam.get(function(string) {
           var urdfModel = new ROSLIB.UrdfModel({
             string: string
           });
           var loader = ROS3D.COLLADA_LOADER_2;
+          if (that.globalOptions.colladaLoader === 'collada') {
+            loader = ROS3D.COLLADA_LOADER;
+          } else if (that.globalOptions.colladaLoader === 'collada2') {
+            loader = ROS3D.COLLADA_LOADER_2;
+          } else {
+            console.warn('Unknown Collada loader', that.globalOptions.colladaLoader);
+            loader = ROS3D.COLLADA_LOADER_2;
+          }
           that._urdf = new ROS3D.Urdf({
             urdfModel: urdfModel,
-            path: that.colladaFileServer,
-            tfClient: tfClient,
+            path: that.globalOptions.colladaServer,
+            tfClient: that.tfClient,
             tfPrefix: '',
             loader: loader
           });
           callback && callback();
         });
-      },
-
-      removeFromViewer: function() {
-        if (this._viewer) {
-          this._viewer.scene.remove(this._urdf);
-        }
-      },
-
-      _onOptionsChanged: function(param, colladaFileServer) {
-        this.fire('update');
       },
     });
   </script>

@@ -4,9 +4,14 @@
 <link rel="import" href="../paper-styles/color.html">
 <link rel="import" href="../paper-styles/typography.html">
 <link rel="import" href="../paper-checkbox/paper-checkbox.html">
-<link rel="import" href="../paper-input/paper-input.html">
 <link rel="import" href="../paper-icon-button/paper-icon-button.html">
 <link rel="import" href="imports.html">
+<link rel="import" href="ros-rviz-depth-cloud.html">
+<link rel="import" href="ros-rviz-grid.html">
+<link rel="import" href="ros-rviz-interactive-markers.html">
+<link rel="import" href="ros-rviz-markers.html">
+<link rel="import" href="ros-rviz-options.html">
+<link rel="import" href="ros-rviz-urdf.html">
 
 <dom-module id="ros-rviz-display">
   <template>
@@ -21,6 +26,9 @@
       paper-checkbox {
         display: inline;
       }
+      #collapse {
+        padding: 0px 10px;
+      }
       #header {
         cursor: pointer;
         padding: 0px 10px;
@@ -34,24 +42,44 @@
       #deleteButton:hover {
         color: var(--paper-red-500);
       }
-      #options {
-        margin: 0px 10px;
-      }
     </style>
     <div class="layout horizontal" id="header" on-tap="_toggleCollapse">
       <template is="dom-if" if="{{!permanent}}">
-        <paper-checkbox checked="{{isShown}}" on-tap="_handleCheckbox"><h1>{{name}}</h1></paper-checkbox>
+        <paper-checkbox checked="{{isShown}}" on-tap="_handleCheckbox">
+          <h1>{{name}}</h1>
+        </paper-checkbox>
       </template>
       <template is="dom-if" if="{{permanent}}">
         <h1>{{name}}</h1>
       </template>
       <div class="flex"></div>
-      <paper-icon-button id="deleteButton" icon="cancel" on-tap="deleteDisplay" hidden$="{{permanent}}"></paper-icon-button>
+      <paper-icon-button id="deleteButton" icon="cancel" on-tap="destroy"
+        hidden$="{{permanent}}"></paper-icon-button>
     </div>
     <iron-collapse id="collapse">
-      <div id="options">
-        <content></content>
-      </div>
+      <template is="dom-if" if="{{_typeIs('globalOptions', type)}}">
+        <ros-rviz-options id="display"
+          global-options="{{globalOptions}}"
+        ></ros-rviz-options>
+      </template>
+      <template is="dom-if" if="{{_typeIs('grid', type)}}">
+        <ros-rviz-grid id="display"
+          cellSize="{{options.cellSize}}"
+          color="{{options.color}}"
+          global-options="{{globalOptions}}"
+          numCells="{{options.numCells}}"
+          viewer="{{internal.viewer}}"
+        ></ros-rviz-grid>
+      </template>
+      <template is="dom-if" if="{{_typeIs('urdf', type)}}">
+        <ros-rviz-urdf id="display"
+          global-options="{{globalOptions}}"
+          param="{{options.param}}"
+          ros="{{internal.ros}}"
+          tf-client="{{internal.tfClient}}"
+          viewer="{{internal.viewer}}"
+        ></ros-rviz-urdf>
+      </template>
     </iron-collapse>
   </template>
   <script>
@@ -66,75 +94,39 @@
           value: true,
           observer: '_onIsShownChanged',
         },
+        globalOptions: Object,
+        /**
+         * Options for this type of display.
+         * It is left up to the display type to interpret the options.
+         */
+        options: {
+          type: Object,
+          value: function() {
+            return {};
+          },
+        },
         permanent: {
           type: Boolean,
           value: false
         },
-        _viewer: Object,
-        _tfClient: Object,
-        _ros: Object,
-        _addedToViewer: {
-          type: Boolean,
-          value: false,
+        type: {
+          type: String,
         },
       },
 
-      attached: function() {
-        var children = this.getEffectiveChildren();
-        if (children.length >= 1) {
-          this.display = children[0];
-          this.display.isShown = this.isShown;
-          var that = this;
-          this.display.addEventListener('update', function() {
-            that.updateDisplay(that._viewer, that._ros, that._tfClient);
-          });
-          this.name = this.display.name;
-        }
+      show: function() {
+        this.isShown = true;
       },
 
-      addToViewer: function() {
-        if (!this._addedToViewer) {
-          this.display.addToViewer();
-          this._addedToViewer = true;
-        }
-      },
-
-      deleteDisplay: function() {
-        this.display.removeFromViewer();
-        this.display.deleteDisplay();
+      destroy: function() {
+        var display = this.$$('#display');
+        display.hide();
+        display.destroy();
         this.parentNode.removeChild(this);
       },
 
-      removeFromViewer: function() {
-        if (this._addedToViewer) {
-          this.display.removeFromViewer();
-          this._addedToViewer = false;
-        }
-      },
-
-      updateDisplay: function(viewer, ros, tfClient) {
-        if (this.isShown && !this._addedToViewer) {
-          this.addToViewer();
-        }
-        this._viewer = viewer;
-        this._ros = ros;
-        this._tfClient = tfClient;
-        if (this.isShown) {
-          this.removeFromViewer();
-        }
-        var that = this;
-        this.display.updateDisplay(viewer, ros, tfClient, function() {
-          if (that.isShown) {
-            that.addToViewer();
-          }
-        });
-      },
-
-      updateGlobalOptions: function(globalOptions) {
-        this.globalOptions = globalOptions;
-        if (this.display.updateGlobalOptions) {
-          this.display.updateGlobalOptions(this.globalOptions);
-        }
+      hide: function() {
+        this.isShown = false;
       },
 
       _handleCheckbox: function(evt) {
@@ -142,21 +134,21 @@
       },
 
       _onIsShownChanged: function() {
-        if (this.display) {
-          this.display.isShown = this.isShown;
-        }
-        if (this.isShown && !this._addedToViewer && this.display) {
-          this.display.addToViewer();
-          this._addedToViewer = true;
-        } else if (!this.isShown && this._addedToViewer && this.display) {
-          this.display.removeFromViewer();
-          this._addedToViewer = false;
+        var display = this.$$('#display');
+        if (this.isShown && display) {
+          display.show();
+        } else if (!this.isShown && display) {
+          display.hide();
         }
       },
 
       _toggleCollapse: function() {
         this.$.collapse.toggle();
-      }
+      },
+
+      _typeIs: function(candidate, actual) {
+        return candidate === actual;
+      },
     });
   </script>
 </dom-module>

@@ -14,65 +14,68 @@
 
       properties: {
         cellSize: {
+          notify: true,
           type: Number,
           value: 1,
         },
         color: {
           type: String,
           value: '#cccccc',
+          notify: true,
         },
         name: {
           type: String,
           value: 'Grid',
         },
         numCells: {
+          notify: true,
           type: Number,
           value: 10,
         },
-        globalOptions: {
+        viewer: {
           type: Object,
-          value: function() {
-            return {};
-          },
         },
         _grid: Object,
-        _viewer: Object,
       },
 
       observers: [
-        '_onOptionsChanged(cellSize, color, numCells)',
+        '_optionsChanged(cellSize, color, numCells)',
       ],
 
-      addToViewer: function() {
-        if (this._viewer) {
-          this._viewer.addObject(this._grid);
+      ready: function() {
+        this._updateGrid();
+        this.show();
+      },
+
+      destroy: function() {
+        // Nothing to destroy.
+      },
+
+      hide: function() {
+        if (this.viewer) {
+          this.viewer.scene.remove(this._grid);
         }
       },
 
-      deleteDisplay: function() {
-        // Nothing to delete.
+      show: function() {
+        if (this.viewer) {
+          this.viewer.addObject(this._grid);
+        }
       },
 
-      updateDisplay: function(viewer, ros, tfClient, callback) {
-        var that = this;
-        this._viewer = viewer;
+      _optionsChanged: function(cellSize, color, numCells) {
+        this.hide();
+        this._updateGrid();
+        this.show();
+      },
+
+      _updateGrid: function() {
         this._grid = new ROS3D.Grid({
-          cellSize: that.cellSize,
-          color: that.color,
-          lineWidth: that.lineWidth,
-          num_cells: that.numCells,
+          cellSize: this.cellSize,
+          color: this.color,
+          lineWidth: this.lineWidth,
+          num_cells: this.numCells,
         });
-        callback && callback();
-      },
-
-      removeFromViewer: function() {
-        if (this._viewer) {
-          this._viewer.scene.remove(this._grid);
-        }
-      },
-
-      _onOptionsChanged: function(cellSize, color, numCells) {
-        this.fire('update');
       },
     });
   </script>

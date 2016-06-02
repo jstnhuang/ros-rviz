@@ -1,20 +1,46 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-radio-button/paper-radio-button.html">
+<link rel="import" href="../paper-radio-group/paper-radio-group.html">
 <link rel="import" href="imports.html">
 
 <dom-module id="ros-rviz-options">
   <template>
     <style include="iron-flex iron-flex-alignment"></style>
     <style>
+      label {
+        @apply(--paper-font-common-base);
+      }
     </style>
     <paper-input label="Websocket URL" value="{{url}}" on-blur="_updateGlobalOptions"></paper-input>
     <paper-input label="Web video server URL" value="{{videoServer}}" on-blur="_updateGlobalOptions"></paper-input>
+    <paper-input label="Collada file server URL" value="{{colladaServer}}" on-blur="_updateGlobalOptions"></paper-input>
+    <label id="colladaLabel">Collada loader:</label>
+    <paper-radio-group selected="{{colladaLoader}}" aria-labelledby="colladaLabel">
+      <paper-radio-button name="collada">Loader 1</paper-radio-button>
+      <paper-radio-button name="collada2">Loader 2</paper-radio-button>
+    </paper-radio-group>
   </template>
   <script>
     Polymer({
       is: 'ros-rviz-options',
 
       properties: {
+        clientId: {
+          type: String,
+          value: function() {
+            return '' + Math.random();
+          }
+        },
+        colladaLoader: {
+          observer: '_updateGlobalOptions',
+          type: String,
+          value: 'collada2',
+        },
+        colladaServer: {
+          type: String,
+          value: 'http://localhost:8001/'
+        },
         globalOptions: {
           type: Object,
           notify: true,
@@ -26,32 +52,45 @@
 
         // We have our own copies of the global properties so we have control over
         // when they are updated to the outside world.
-        url: String,
-        videoServer: String,
+        url: {
+          type: String,
+          value: function() {
+            var hostname = window.location.hostname;
+            var protocol = 'ws:';
+            if (window.location.protocol === 'https:') {
+              protocol = 'wss:';
+            }
+            return protocol + '//' + hostname + ':9090';
+          },
+        },
+        videoServer: {
+          type: String,
+          value: function() {
+            var hostname = window.location.hostname;
+            return 'http://' + hostname + ':9999';
+          },
+        },
       },
 
-      attached: function() {
-        this.url = this.globalOptions.url;
-        this.videoServer = this.globalOptions.videoServer;
+      ready: function() {
+        this._updateGlobalOptions();
       },
 
-      addToViewer: function() {
+      destroy: function() {
+        // Nothing to destroy.
+      },
+
+      hide: function() {
         // Nothing to do.
       },
 
-      deleteDisplay: function() {
-        // Nothing to delete.
-      },
-
-      updateDisplay: function(viewer, ros, tfClient, callback) {
-        // Options do not display anything.
-      },
-
-      removeFromViewer: function() {
+      show: function() {
         // Nothing to do.
       },
 
       _updateGlobalOptions: function() {
+        this.set('globalOptions.colladaLoader', this.colladaLoader);
+        this.set('globalOptions.colladaServer', this.colladaServer);
         this.set('globalOptions.url', this.url);
         this.set('globalOptions.videoServer', this.videoServer);
       },
