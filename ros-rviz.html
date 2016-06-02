@@ -224,37 +224,21 @@ Example:
       },
 
       addInteractiveMarkers: function() {
-        //var display = document.createElement('ros-rviz-display');
-        //var markers = document.createElement('ros-rviz-interactive-markers');
-        //markers.globalOptions = this.globalOptions;
-        //Polymer.dom(display).appendChild(markers);
-        //var list = this.$.displayList;
-        //Polymer.dom(list).appendChild(display);
-        //display.updateDisplay(this.viewer, this.ros, this.tfClient);
-        //display.addToViewer();
+        this.push('displays', {
+          internal: {
+            viewer: this._viewer,
+            ros: this.ros,
+            tfClient: this.tfClient,
+          },
+          name: 'Interactive Markers',
+          type: 'interactiveMarkers',
+        });
       },
 
       addMarkers: function() {
-        //var display = document.createElement('ros-rviz-display');
-        //var markers = document.createElement('ros-rviz-markers');
-        //markers.globalOptions = this.globalOptions;
-        //Polymer.dom(display).appendChild(markers);
-        //var list = this.$.displayList;
-        //Polymer.dom(list).appendChild(display);
-        //display.updateDisplay(this.viewer, this.ros, this.tfClient);
-        //display.addToViewer();
       },
 
       addDepthCloud: function() {
-        //var display = document.createElement('ros-rviz-display');
-        //var depthCloud = document.createElement('ros-rviz-depth-cloud');
-        //depthCloud.globalOptions = this.globalOptions;
-        //console.log(Polymer.dom(display).create);
-        //Polymer.dom(display).appendChild(depthCloud);
-        //var list = this.$.displayList;
-        //Polymer.dom(list).appendChild(display);
-        //display.updateDisplay(this.viewer, this.ros, this.tfClient);
-        //display.addToViewer();
       },
 
       /**
@@ -297,7 +281,6 @@ Example:
           transThres: 0.005,
           rate: 20.0
         });
-        console.log('ros changed, updating tf client');
       },
 
       _toggleDisplayList: function() {

@@ -4,85 +4,75 @@
 
 <dom-module id="ros-rviz-interactive-markers">
   <template>
-    <paper-input label="Interactive marker topic" value="{{topic}}"></paper-input>
-    <paper-input label="Collada file server" value="{{colladaFileServer}}"></paper-input>
+    <paper-input label="Interactive marker topic" on-blur="_updateDisplay" value="{{topic}}"></paper-input>
   </template>
   <script>
     Polymer({
       is: 'ros-rviz-interactive-markers',
 
       properties: {
-        colladaFileServer: {
-          type: String,
-          value: 'http://resources.robotwebtools.org/'
-        },
+        globalOptions: Object,
         name: {
           type: String,
           value: 'Interactive Markers',
         },
+        ros: Object,
+        tfClient: Object,
         topic: {
           type: String,
           value: '/basic_controls',
         },
-        globalOptions: {
-          type: Object,
-          value: function() {
-            return {};
-          },
-        },
-        isShown: Boolean,
+        viewer: Object,
         _client: {
           type: Object,
           value: null
         },
-        _viewer: Object,
-        _ros: Object,
-        _tfClient: Object,
       },
 
-      observers: [
-        '_onOptionsChanged(topic, colladaFileServer)',
-      ],
+      ready: function() {
+        this._updateDisplay();
+        this.show();
+      },
 
-      addToViewer: function() {
+      destroy: function() {
+        // Nothing to destroy.
+      },
+
+      hide: function() {
+        if (this._client) {
+          this._client.unsubscribe();
+        }
+      },
+
+      show: function() {
         if (this._client) {
           this._client.subscribe(this.topic);
         }
       },
 
-      updateDisplay: function(viewer, ros, tfClient, callback) {
+      _updateDisplay: function() {
         var that = this;
-        this._viewer = viewer;
-        this._ros = ros;
-        this._tfClient = tfClient;
         if (this._client) {
           this._client.unsubscribe();
+        }
+        var loader = ROS3D.COLLADA_LOADER_2;
+        if (that.globalOptions.colladaLoader === 'collada') {
+          loader = ROS3D.COLLADA_LOADER;
+        } else if (that.globalOptions.colladaLoader === 'collada2') {
+          loader = ROS3D.COLLADA_LOADER_2;
+        } else {
+          console.warn('Unknown Collada loader', that.globalOptions.colladaLoader);
+          loader = ROS3D.COLLADA_LOADER_2;
         }
         this._client = new ROS3D.InteractiveMarkerClient({
-          path: this.colladaFileServer,
-          ros: this._ros,
-          tfClient: this._tfClient,
+          loader: loader,
+          path: this.globalOptions.colladaServer,
+          ros: this.ros,
+          tfClient: this.tfClient,
           topic: this.topic,
-          camera: this._viewer.camera,
-          rootObject: this._viewer.selectableObjects,
+          camera: this.viewer.camera,
+          rootObject: this.viewer.selectableObjects,
         });
-        callback && callback();
-      },
-
-      deleteDisplay: function() {
-        if (this._client) {
-          this._client.unsubscribe(); 
-        }
-      },
-
-      removeFromViewer: function() {
-        if (this._client) {
-          this._client.unsubscribe();
-        }
-      },
-
-      _onOptionsChanged: function(topic, colladaFileServer) {
-        this.fire('update');
       },
     });
   </script>
