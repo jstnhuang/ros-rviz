@@ -39,7 +39,10 @@
         },
         colladaServer: {
           type: String,
-          value: 'http://localhost:8001/'
+          value: function() {
+            var hostname = window.location.hostname;
+            return 'http://' + hostname + ':8001';
+          },
         },
         globalOptions: {
           type: Object,
