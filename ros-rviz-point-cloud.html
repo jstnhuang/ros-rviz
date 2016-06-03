@@ -4,39 +4,36 @@
 <link rel="import" href="imports.html">
 
 <!--
-  Version that takes in a color and depth image topic.
+  Version that takes in a point cloud topic.
 -->
-<dom-module id="ros-rviz-depth-cloud">
+<dom-module id="ros-rviz-point-cloud">
   <template>
     <ros-service
-     id="startDepthService"
-     on-response="_onDepthStart"
-     name="/start_depth_cloud"
+     id="startPcService"
+     on-response="_onPcStart"
+     on-fail="_onPcStartFail"
+     name="/start_point_cloud"
      ros="{{ros}}"
-     service-type="rws_rviz/StartDepthCloud"
+     service-type="rws_rviz/StartPointCloud"
     ></ros-service>
     <ros-service
-     id="stopDepthService"
-     name="/stop_depth_cloud"
+     id="stopPcService"
+     name="/stop_point_cloud"
+     on-fail="_onPcStopFail"
      ros="{{ros}}"
-     service-type="rws_rviz/StopDepthCloud"
+     service-type="rws_rviz/StopPointCloud"
     ></ros-service>
-    <paper-input label="Color image topic" value="{{colorTopic}}" on-blur="_onOptionsChanged"></paper-input>
-    <paper-input label="Depth image topic" value="{{depthTopic}}" on-blur="_onOptionsChanged"></paper-input>
+    <paper-input label="Topic" value="{{topic}}" on-blur="_onOptionsChanged"></paper-input>
     <paper-input label="Camera frame ID" value="{{frameId}}" on-blur="_onOptionsChanged"></paper-input>
   </template>
   <script>
     Polymer({
-      is: 'ros-rviz-depth-cloud',
+      is: 'ros-rviz-point-cloud',
 
       properties: {
-        colorTopic: {
+        topic: {
           type: String,
-          value: '/head_mount_kinect/rgb/image_rect_color'
-        },
-        depthTopic: {
-          type: String,
-          value: '/head_mount_kinect/depth_registered/image_raw'
+          value: '/head_mount_kinect/depth_registered/points'
         },
         frameId: {
           type: String,
@@ -45,7 +42,7 @@
         globalOptions: Object,
         name: {
           type: String,
-          value: 'Depth cloud',
+          value: 'Point cloud',
         },
         tfClient: Object,
         viewer: Object,
@@ -54,11 +51,10 @@
           type: Object,
           value: null
         },
-        _oldColorTopic: String,
-        _oldDepthTopic: String,
+        _oldTopic: String,
         _sceneNode: Object,
-        _depthUrl: String,
-        _depthUrlTopic: String, // Backend image topic to stream.
+        _url: String,
+        _urlTopic: String, // Backend image topic to stream.
       },
 
       ready: function() {
@@ -104,11 +100,11 @@
         if (this._cloud) {
           this._cloud.stopStream();
         }
-        if (!this._depthUrl) {
+        if (!this._url) {
           return;
         }
         this._cloud = new ROS3D.DepthCloud({
-          url: this._depthUrl,
+          url: this._url,
           f: 525.0,
         });
         this._cloud.startStream();
@@ -128,14 +124,14 @@
         this.viewer.scene.add(this._sceneNode);
       },
 
-      _computeDepthUrl: function(_depthUrlTopic) {
-        var url = this.globalOptions.videoServer + '/streams' + _depthUrlTopic + '.webm?enc=webm&bitrate=250000&framerate=15';
+      _computeUrl: function(_urlTopic) {
+        var url = this.globalOptions.videoServer + '/streams' + _urlTopic + '.webm?enc=webm&bitrate=250000&framerate=15';
         return url;
       },
 
-      _onDepthStart: function(evt) {
-        this._depthUrlTopic = evt.detail.topic;
-        this._depthUrl = this._computeDepthUrl(this._depthUrlTopic);
+      _onPcStart: function(evt) {
+        this._urlTopic = evt.detail.topic;
+        this._url = this._computeUrl(this._urlTopic);
         this._updateDisplay();
       },
 
@@ -145,27 +141,33 @@
 
       _updateStream: function() {
         this._endStream(); 
-        if (!this.colorTopic || !this.depthTopic) {
+        if (!this.topic) {
           return;
         }
-        this._oldColorTopic = this.colorTopic;
-        this._oldDepthTopic = this.depthTopic;
-        this.$.startDepthService.call({
-          depth_topic: this.depthTopic,
-          rgb_topic: this.colorTopic,
+        this._oldTopic = this.topic;
+        this.$.startPcService.call({
+          topic: this.topic,
+          camera_frame_id: this.frameId,
           client_id: this.globalOptions.clientId
         });
       },
 
       _endStream: function() {
-        if (this._oldColorTopic && this._oldDepthTopic) {
-          this.$.stopDepthService.call({
-            depth_topic: this._oldDepthTopic,
-            rgb_topic: this._oldColorTopic,
+        if (this._oldTopic) {
+          this.$.stopPcService.call({
+            topic: this._oldTopic,
             client_id: this.globalOptions.clientId
           });
         }
       },
+
+      _onPcStartFail: function(evt) {
+        console.error('Error starting point cloud stream', evt.detail);
+      },
+
+      _onPcStopFail: function(evt) {
+        console.error('Error stopping point cloud stream', evt.detail);
+      }
     });
   </script>
 </dom-module>

@@ -11,6 +11,7 @@
 <link rel="import" href="ros-rviz-interactive-markers.html">
 <link rel="import" href="ros-rviz-markers.html">
 <link rel="import" href="ros-rviz-options.html">
+<link rel="import" href="ros-rviz-point-cloud.html">
 <link rel="import" href="ros-rviz-urdf.html">
 
 <dom-module id="ros-rviz-display">
@@ -71,6 +72,15 @@
           viewer="{{internal.viewer}}"
         ></ros-rviz-grid>
       </template>
+      <template is="dom-if" if="{{_typeIs('depthCloud', type)}}">
+        <ros-rviz-depth-cloud id="display"
+          global-options="{{globalOptions}}"
+          ros="{{internal.ros}}"
+          tf-client="{{internal.tfClient}}"
+          topic="{{options.topic}}"
+          viewer="{{internal.viewer}}"
+        ></ros-rviz-depth-cloud>
+      </template>
       <template is="dom-if" if="{{_typeIs('interactiveMarkers', type)}}">
         <ros-rviz-interactive-markers id="display"
           global-options="{{globalOptions}}"
@@ -89,6 +99,15 @@
           topic="{{options.topic}}"
           viewer="{{internal.viewer}}"
         ></ros-rviz-markers>
+      </template>
+      <template is="dom-if" if="{{_typeIs('pointCloud', type)}}">
+        <ros-rviz-point-cloud id="display"
+          global-options="{{globalOptions}}"
+          ros="{{internal.ros}}"
+          tf-client="{{internal.tfClient}}"
+          topic="{{options.topic}}"
+          viewer="{{internal.viewer}}"
+        ></ros-rviz-point-cloud>
       </template>
       <template is="dom-if" if="{{_typeIs('urdf', type)}}">
         <ros-rviz-urdf id="display"

@@ -103,6 +103,7 @@ Example:
                 <paper-item on-tap="addGrid">Grid</paper-item>
                 <paper-item on-tap="addInteractiveMarkers">Interactive markers</paper-item>
                 <paper-item on-tap="addMarkers">Markers</paper-item>
+                <paper-item on-tap="addPointCloud">Point cloud</paper-item>
                 <paper-item on-tap="addUrdf">Robot model</paper-item>
               </paper-menu>
             </paper-menu-button>
@@ -248,6 +249,27 @@ Example:
       },
 
       addDepthCloud: function() {
+        this.push('displays', {
+          internal: {
+            viewer: this._viewer,
+            ros: this.ros,
+            tfClient: this.tfClient,
+          },
+          name: 'Depth cloud',
+          type: 'depthCloud',
+        });
+      },
+
+      addPointCloud: function() {
+        this.push('displays', {
+          internal: {
+            viewer: this._viewer,
+            ros: this.ros,
+            tfClient: this.tfClient,
+          },
+          name: 'Point cloud',
+          type: 'pointCloud',
+        });
       },
 
       /**
