@@ -85,7 +85,7 @@ Example:
       }
     </style>
     <div id="container" class="layout horizontal">
-      <iron-collapse id="sidebar" opened horizontal>
+      <iron-collapse id="sidebar" opened="{{sidebarOpened}}" horizontal>
         <paper-header-panel mode="seamed" id="displays">
           <paper-toolbar id="displayHeader">
             <paper-icon-button id="closeDisplays" icon="arrow-back"
@@ -167,7 +167,7 @@ Example:
          * }
          */
         config: {
-          computed: '_computeConfig(globalOptions, displays)',
+          computed: '_computeConfig(globalOptions, displays, sidebarOpened)',
           notify: true,
           type: Object,
         },
@@ -199,6 +199,10 @@ Example:
         ros: {
           type: Object,
           observer: '_rosChanged',
+        },
+        sidebarOpened: {
+          type: Boolean,
+          value: true,
         },
         tfClient: Object, // The ROSLIB.TFClient
         websocketUrl: {
@@ -322,6 +326,9 @@ Example:
             this.push('displays', displayConfig);
           }
         }
+        if (typeof(config.sidebarOpened) === 'boolean') {
+          this.sidebarOpened = config.sidebarOpened;
+        }
       },
 
       resize: function() {
@@ -332,10 +339,11 @@ Example:
         }
       },
 
-      _computeConfig: function(globalOptions, displays) {
+      _computeConfig: function(globalOptions, displays, sidebarOpened) {
         return {
           globalOptions: globalOptions,
           displays: displays,
+          sidebarOpened: sidebarOpened,
         };  
       },
 
