@@ -65,57 +65,59 @@
       </template>
       <template is="dom-if" if="{{_typeIs('grid', type)}}">
         <ros-rviz-grid id="display"
-          cellSize="{{options.cellSize}}"
+          cell-size="{{options.cellSize}}"
           color="{{options.color}}"
           global-options="{{globalOptions}}"
-          numCells="{{options.numCells}}"
-          viewer="{{internal.viewer}}"
+          num-cells="{{options.numCells}}"
+          viewer="{{viewer}}"
         ></ros-rviz-grid>
       </template>
       <template is="dom-if" if="{{_typeIs('depthCloud', type)}}">
         <ros-rviz-depth-cloud id="display"
+          color-topic="{{options.colorTopic}}"
+          depth-topic="{{options.depthTopic}}"
+          frame-id="{{options.frameId}}"
           global-options="{{globalOptions}}"
-          ros="{{internal.ros}}"
-          tf-client="{{internal.tfClient}}"
-          topic="{{options.topic}}"
-          viewer="{{internal.viewer}}"
+          ros="{{ros}}"
+          tf-client="{{tfClient}}"
+          viewer="{{viewer}}"
         ></ros-rviz-depth-cloud>
       </template>
       <template is="dom-if" if="{{_typeIs('interactiveMarkers', type)}}">
         <ros-rviz-interactive-markers id="display"
           global-options="{{globalOptions}}"
-          ros="{{internal.ros}}"
-          tf-client="{{internal.tfClient}}"
+          ros="{{ros}}"
+          tf-client="{{tfClient}}"
           topic="{{options.topic}}"
-          viewer="{{internal.viewer}}"
+          viewer="{{viewer}}"
         ></ros-rviz-interactive-markers>
       </template>
       <template is="dom-if" if="{{_typeIs('markers', type)}}">
         <ros-rviz-markers id="display"
           global-options="{{globalOptions}}"
           is-shown="{{isShown}}"
-          ros="{{internal.ros}}"
-          tf-client="{{internal.tfClient}}"
+          ros="{{ros}}"
+          tf-client="{{tfClient}}"
           topic="{{options.topic}}"
-          viewer="{{internal.viewer}}"
+          viewer="{{viewer}}"
         ></ros-rviz-markers>
       </template>
       <template is="dom-if" if="{{_typeIs('pointCloud', type)}}">
         <ros-rviz-point-cloud id="display"
           global-options="{{globalOptions}}"
-          ros="{{internal.ros}}"
-          tf-client="{{internal.tfClient}}"
+          ros="{{ros}}"
+          tf-client="{{tfClient}}"
           topic="{{options.topic}}"
-          viewer="{{internal.viewer}}"
+          viewer="{{viewer}}"
         ></ros-rviz-point-cloud>
       </template>
       <template is="dom-if" if="{{_typeIs('urdf', type)}}">
         <ros-rviz-urdf id="display"
           global-options="{{globalOptions}}"
           param="{{options.param}}"
-          ros="{{internal.ros}}"
-          tf-client="{{internal.tfClient}}"
-          viewer="{{internal.viewer}}"
+          ros="{{ros}}"
+          tf-client="{{tfClient}}"
+          viewer="{{viewer}}"
         ></ros-rviz-urdf>
       </template>
     </iron-collapse>
@@ -127,6 +129,7 @@
       properties: {
         display: Object,
         name: String,
+        index: Number,
         isShown: {
           type: Boolean,
           value: true,
@@ -147,9 +150,12 @@
           type: Boolean,
           value: false
         },
+        ros: Object,
+        tfClient: Object,
         type: {
           type: String,
         },
+        viewer: Object,
       },
 
       show: function() {
@@ -157,14 +163,24 @@
       },
 
       destroy: function() {
-        var display = this.$$('#display');
-        display.hide();
-        display.destroy();
-        this.parentNode.removeChild(this);
+        if (!this.permanent) {
+          var display = this.$$('#display');
+          display.hide();
+          display.destroy();
+          this.fire('delete-display', {index: this.index});
+        }
       },
 
       hide: function() {
-        this.isShown = false;
+        if (!this.permanent) {
+          this.isShown = false;
+        }
+      },
+
+      // Currently only used by global options display.
+      loadConfig: function(config) {
+        var display = this.$$('#display');
+        display.loadConfig(config);
       },
 
       _handleCheckbox: function(evt) {

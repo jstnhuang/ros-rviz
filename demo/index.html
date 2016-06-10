@@ -21,10 +21,7 @@
   <body unresolved>
     <template id="t" is="dom-bind">
       <ros-websocket auto id="websocket" url="{{url}}" ros="{{ros}}"></ros-websocket>
-      <ros-rviz ros="{{ros}}" websocket-url="{{url}}">
-        <!--ros-rviz-display><ros-rviz-grid num-cells="20"></ros-rviz-grid></ros-rviz-display-->
-        <!--ros-rviz-display><ros-rviz-urdf></ros-rviz-urdf></ros-rviz-display-->
-      </ros-rviz>
+      <ros-rviz id="rviz" ros="{{ros}}" websocket-url="{{url}}">
     </template>
   </body>
   <script>

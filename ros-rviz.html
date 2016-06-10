@@ -110,6 +110,7 @@ Example:
           </paper-toolbar>
           <div id="displayList" class="fit">
             <ros-rviz-display
+              id="options"
               global-options="{{globalOptions}}"
               name="Global options"
               permanent
@@ -118,7 +119,11 @@ Example:
             <template is="dom-repeat" items="{{displays}}" as="display">
               <ros-rviz-display
                 global-options="{{globalOptions}}"
-                internal="{{display.internal}}"
+                index="{{index}}"
+                on-delete-display="_deleteDisplay"
+                viewer="{{_viewer}}"
+                ros="{{ros}}"
+                tf-client="{{tfClient}}"
                 name="{{display.name}}"
                 options="{{display.options}}"
                 type="{{display.type}}"
@@ -147,6 +152,24 @@ Example:
           value: function() {
             return {};
           },
+        },
+
+        /**
+         * A JSON object that specifies the configuration of the visualization.
+         * Example:
+         * {
+         *   globalOptions: { url: ...},
+         *   displays: [
+         *     { name: "Grid", type: "grid",
+         *       options: { numCells: 20 ...}
+         *     }
+         *   ]
+         * }
+         */
+        config: {
+          computed: '_computeConfig(globalOptions, displays)',
+          notify: true,
+          type: Object,
         },
 
         /**
@@ -216,58 +239,54 @@ Example:
        */
       addGrid: function() {
         this.push('displays', {
-          internal: {
-            viewer: this._viewer,
-          },
           name: 'Grid',
+          options: {
+            cellSize: 1,
+            color: '#cccccc',
+            numCells: 10,
+          },
           type: 'grid',
         });
       },
 
       addInteractiveMarkers: function() {
         this.push('displays', {
-          internal: {
-            viewer: this._viewer,
-            ros: this.ros,
-            tfClient: this.tfClient,
-          },
           name: 'Interactive Markers',
+          options: {
+            topic: '/basic_controls',
+          },
           type: 'interactiveMarkers',
         });
       },
 
       addMarkers: function() {
         this.push('displays', {
-          internal: {
-            viewer: this._viewer,
-            ros: this.ros,
-            tfClient: this.tfClient,
-          },
           name: 'Markers',
+          options: {
+            topic: '/visualization_marker',
+          },
           type: 'markers',
         });
       },
 
       addDepthCloud: function() {
         this.push('displays', {
-          internal: {
-            viewer: this._viewer,
-            ros: this.ros,
-            tfClient: this.tfClient,
-          },
           name: 'Depth cloud',
+          options: {
+            colorTopic: '/head_mount_kinect/rgb/image_rect_color',
+            depthTopic: '/head_mount_kinect/depth_registered/image_raw',
+            frameId: '/head_mount_kinect_rgb_optical_frame',
+          },
           type: 'depthCloud',
         });
       },
 
       addPointCloud: function() {
         this.push('displays', {
-          internal: {
-            viewer: this._viewer,
-            ros: this.ros,
-            tfClient: this.tfClient,
-          },
           name: 'Point cloud',
+          options: {
+            topic: '/head_mount_kinect/depth_registered/points',
+          },
           type: 'pointCloud',
         });
       },
@@ -278,14 +297,31 @@ Example:
        */
       addUrdf: function() {
         this.push('displays', {
-          internal: {
-            viewer: this._viewer,
-            ros: this.ros,
-            tfClient: this.tfClient,
-          },
           name: 'Robot model',
+          options: {
+            param: 'robot_description',
+          },
           type: 'urdf',
         });
+      },
+
+      loadConfig: function(config) {
+        if (config.globalOptions) {
+          this.$.options.loadConfig(config.globalOptions);
+        }
+        var domDisplays = this.$.displayList.querySelectorAll('ros-rviz-display'); 
+        for (var d=0; d<domDisplays.length; ++d) {
+          var display = domDisplays[d];
+          display.hide();
+          display.destroy();
+        }
+        this.splice('displays', 0);
+        if (config.displays) {
+          for (var i=0; i<config.displays.length; ++i) {
+            var displayConfig = config.displays[i];
+            this.push('displays', displayConfig);
+          }
+        }
       },
 
       resize: function() {
@@ -296,8 +332,20 @@ Example:
         }
       },
 
+      _computeConfig: function(globalOptions, displays) {
+        return {
+          globalOptions: globalOptions,
+          displays: displays,
+        };  
+      },
+
       _computeWebsocketUrl: function(url) {
         return url;
+      },
+
+      _deleteDisplay: function(evt) {
+        var index = evt.detail.index;
+        this.splice('displays', index, 1);
       },
 
       _onDisplaySelected: function() {

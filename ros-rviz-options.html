@@ -47,6 +47,9 @@
         globalOptions: {
           type: Object,
           notify: true,
+          //value: function() {
+          //  return {};
+          //},
         },
         name: {
           type: String,
@@ -85,6 +88,22 @@
 
       hide: function() {
         // Nothing to do.
+      },
+
+      loadConfig: function(config) {
+        if (config.colladaLoader === 'collada' || config.colladaLoader === 'collada2') {
+          this.colladaLoader = config.colladaLoader;
+        }
+        if (config.colladaServer) {
+          this.colladaServer = config.colladaServer;
+        }
+        if (config.url) {
+          this.url = config.url;
+        }
+        if (config.videoServer) {
+          this.videoServer == config.videoServer;
+        }
+        this._updateGlobalOptions();
       },
 
       show: function() {
