@@ -180,7 +180,9 @@
       // Currently only used by global options display.
       loadConfig: function(config) {
         var display = this.$$('#display');
-        display.loadConfig(config);
+        if (display && display.loadConfig) {
+          display.loadConfig(config);
+        }
       },
 
       _handleCheckbox: function(evt) {
