@@ -134,7 +134,7 @@ Example:
         </paper-header-panel>
       </iron-collapse>
       <paper-fab icon="menu" id="openDisplays"
-        hidden$="{{_sidebarOpen}}" on-tap="_toggleDisplayList"></paper-fab>
+        hidden$="{{sidebarOpened}}" on-tap="_toggleDisplayList"></paper-fab>
       <paper-tooltip position="right" animation-delay="0"
         for="openDisplays">Open displays</paper-tooltip>
       <div id="viewer" class="flex">
@@ -211,10 +211,6 @@ Example:
           computed: '_computeWebsocketUrl(globalOptions.url)',
         },
         _viewer: Object, // The ROS3D viewer
-        _sidebarOpen: {
-          type: Boolean,
-          value: true,
-        },
       },
 
       behaviors: [Polymer.IronResizableBehavior],
@@ -372,7 +368,6 @@ Example:
 
       _toggleDisplayList: function() {
         this.$.sidebar.toggle();
-        this._sidebarOpen = !this._sidebarOpen;
       },
     });
   </script>
