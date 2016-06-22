@@ -68,6 +68,7 @@
           cell-size="{{options.cellSize}}"
           color="{{options.color}}"
           global-options="{{globalOptions}}"
+          is-shown="{{isShown}}"
           num-cells="{{options.numCells}}"
           viewer="{{viewer}}"
         ></ros-rviz-grid>
@@ -78,6 +79,7 @@
           depth-topic="{{options.depthTopic}}"
           frame-id="{{options.frameId}}"
           global-options="{{globalOptions}}"
+          is-shown="{{isShown}}"
           ros="{{ros}}"
           tf-client="{{tfClient}}"
           viewer="{{viewer}}"
@@ -86,6 +88,7 @@
       <template is="dom-if" if="{{_typeIs('interactiveMarkers', type)}}">
         <ros-rviz-interactive-markers id="display"
           global-options="{{globalOptions}}"
+          is-shown="{{isShown}}"
           ros="{{ros}}"
           tf-client="{{tfClient}}"
           topic="{{options.topic}}"
@@ -105,6 +108,7 @@
       <template is="dom-if" if="{{_typeIs('pointCloud', type)}}">
         <ros-rviz-point-cloud id="display"
           global-options="{{globalOptions}}"
+          is-shown="{{isShown}}"
           ros="{{ros}}"
           tf-client="{{tfClient}}"
           topic="{{options.topic}}"
@@ -114,6 +118,7 @@
       <template is="dom-if" if="{{_typeIs('urdf', type)}}">
         <ros-rviz-urdf id="display"
           global-options="{{globalOptions}}"
+          is-shown="{{isShown}}"
           param="{{options.param}}"
           ros="{{ros}}"
           tf-client="{{tfClient}}"

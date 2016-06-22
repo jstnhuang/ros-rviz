@@ -120,6 +120,7 @@ Example:
               <ros-rviz-display
                 global-options="{{globalOptions}}"
                 index="{{index}}"
+                is-shown="{{display.isShown}}"
                 on-delete-display="_deleteDisplay"
                 viewer="{{_viewer}}"
                 ros="{{ros}}"
@@ -239,6 +240,7 @@ Example:
        */
       addGrid: function() {
         this.push('displays', {
+          isShown: true,
           name: 'Grid',
           options: {
             cellSize: 1,
@@ -251,6 +253,7 @@ Example:
 
       addInteractiveMarkers: function() {
         this.push('displays', {
+          isShown: true,
           name: 'Interactive Markers',
           options: {
             topic: '/basic_controls',
@@ -261,6 +264,7 @@ Example:
 
       addMarkers: function() {
         this.push('displays', {
+          isShown: true,
           name: 'Markers',
           options: {
             topic: '/visualization_marker',
@@ -271,6 +275,7 @@ Example:
 
       addDepthCloud: function() {
         this.push('displays', {
+          isShown: true,
           name: 'Depth cloud',
           options: {
             colorTopic: '/head_mount_kinect/rgb/image_rect_color',
@@ -283,6 +288,7 @@ Example:
 
       addPointCloud: function() {
         this.push('displays', {
+          isShown: true,
           name: 'Point cloud',
           options: {
             topic: '/head_mount_kinect/depth_registered/points',
@@ -297,6 +303,7 @@ Example:
        */
       addUrdf: function() {
         this.push('displays', {
+          isShown: true,
           name: 'Robot model',
           options: {
             param: 'robot_description',
