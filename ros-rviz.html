@@ -216,6 +216,17 @@ Example:
 
       behaviors: [Polymer.IronResizableBehavior],
 
+      observers: [
+        '_fixedFrameChanged(globalOptions.fixedFrame)',
+      ],
+
+      _fixedFrameChanged: function(fixedFrame) {
+        if (this.tfClient) {
+          this.tfClient.fixedFrame = fixedFrame;
+          this.tfClient.updateGoal();
+        }
+      },
+
       attached: function() {
         var width = this.$.viewer.offsetWidth;
         var height = this.$.viewer.offsetHeight;
