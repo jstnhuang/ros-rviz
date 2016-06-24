@@ -32,7 +32,8 @@
       },
 
       observers: [
-        '_optionsChanged(param, tfPrefix)',
+        '_optionsChanged(param)',
+        '_tfPrefixChanged(tfPrefix)',
       ],
 
       ready: function() {
@@ -58,7 +59,7 @@
         }
       },
 
-      _optionsChanged: function(param, tfPrefix) {
+      _optionsChanged: function(param) {
         var that = this;
         this.debounce('updateForOptions', function() {
           that.hide();
@@ -66,6 +67,12 @@
             that.show();
           });
         }, 1000);
+      },
+
+      _tfPrefixChanged: function(tfPrefix) {
+        if (this._urdf) {
+          this._urdf.updateTfPrefix(tfPrefix);
+        }
       },
 
       _updateDisplay: function(callback) {

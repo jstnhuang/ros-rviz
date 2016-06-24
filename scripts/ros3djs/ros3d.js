@@ -3428,6 +3428,7 @@ ROS3D.Urdf = function(options) {
   var tfClient = options.tfClient;
   var tfPrefix = options.tfPrefix || '';
   var loader = options.loader || ROS3D.COLLADA_LOADER_2;
+  this.sceneNodes = [];
 
   THREE.Object3D.call(this);
 
@@ -3482,6 +3483,7 @@ ROS3D.Urdf = function(options) {
                 object : mesh
             });
             this.add(sceneNode);
+            this.sceneNodes.push({name: link.name, node: sceneNode});
           } else {
             console.warn('Could not load geometry mesh: '+uri);
           }
@@ -3517,12 +3519,20 @@ ROS3D.Urdf = function(options) {
               object: shapeMesh
           });
           this.add(scene);
+          this.sceneNodes.push({name: link.name, node: scene});
         }
       }
     }
   }
 };
 ROS3D.Urdf.prototype.__proto__ = THREE.Object3D.prototype;
+
+ROS3D.Urdf.prototype.updateTfPrefix = function(tfPrefix) {
+  for (var i=0; i<this.sceneNodes.length; ++i) {
+    var sn = this.sceneNodes[i];
+    sn.node.updateFrameId(tfPrefix + '/' + sn.name);
+  }
+}
 
 /**
  * @author Jihoon Lee - jihoonlee.in@gmail.com
@@ -3601,8 +3611,8 @@ ROS3D.UrdfClient = function(options) {
 ROS3D.SceneNode = function(options) {
   options = options || {};
   var that = this;
-  var tfClient = options.tfClient;
-  var frameID = options.frameID;
+  this.tfClient = options.tfClient;
+  this.frameID = options.frameID;
   var object = options.object;
   this.pose = options.pose || new ROSLIB.Pose();
 
@@ -3615,8 +3625,7 @@ ROS3D.SceneNode = function(options) {
   this.updatePose(this.pose);
 
   // listen for TF updates
-  tfClient.subscribe(frameID, function(msg) {
-
+  this.tfUpdate = function(msg) {
     // apply the transform
     var tf = new ROSLIB.Transform(msg);
     var poseTransformed = new ROSLIB.Pose(that.pose);
@@ -3624,7 +3633,8 @@ ROS3D.SceneNode = function(options) {
 
     // update the world
     that.updatePose(poseTransformed);
-  });
+  };
+  this.tfClient.subscribe(this.frameID, this.tfUpdate);
 };
 ROS3D.SceneNode.prototype.__proto__ = THREE.Object3D.prototype;
 
@@ -3638,6 +3648,16 @@ ROS3D.SceneNode.prototype.updatePose = function(pose) {
   this.quaternion.set(pose.orientation.x, pose.orientation.y,
       pose.orientation.z, pose.orientation.w);
   this.updateMatrixWorld(true);
+};
+
+ROS3D.SceneNode.prototype.unsubscribeTf = function() {
+  this.tfClient.unsubscribe(this.frameID, this.tfUpdate);
+};
+
+ROS3D.SceneNode.prototype.updateFrameId = function(frameId) {
+  this.unsubscribeTf();
+  this.frameID = frameId;
+  this.tfClient.subscribe(this.frameID, this.tfUpdate);
 };
 
 /**
