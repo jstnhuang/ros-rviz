@@ -368,7 +368,7 @@ Example:
         this.tfClient = new ROSLIB.TFClient({
           ros: this.ros,
           angularThres: 0.01,
-          fixedFrame: '/base_link',
+          fixedFrame: this.globalOptions.fixedFrame,
           transThres: 0.005,
           rate: 20.0
         });

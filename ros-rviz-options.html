@@ -12,6 +12,7 @@
         @apply(--paper-font-common-base);
       }
     </style>
+    <paper-input label="Fixed frame" value="{{fixedFrame}}" on-blur="_updateGlobalOptions"></paper-input>
     <paper-input label="Websocket URL" value="{{url}}" on-blur="_updateGlobalOptions"></paper-input>
     <paper-input label="Web video server URL" value="{{videoServer}}" on-blur="_updateGlobalOptions"></paper-input>
     <paper-input label="Collada file server URL" value="{{colladaServer}}" on-blur="_updateGlobalOptions"></paper-input>
@@ -43,6 +44,10 @@
             var hostname = window.location.hostname;
             return 'http://' + hostname + ':8001/';
           },
+        },
+        fixedFrame: {
+          type: String,
+          value: '/base_link',
         },
         globalOptions: {
           type: Object,
@@ -97,6 +102,9 @@
         if (config.colladaServer) {
           this.colladaServer = config.colladaServer;
         }
+        if (config.fixedFrame) {
+          this.fixedFrame = config.fixedFrame;
+        }
         if (config.url) {
           this.url = config.url;
         }
@@ -111,11 +119,15 @@
       },
 
       _updateGlobalOptions: function() {
-        this.set('globalOptions.clientId', this.clientId);
-        this.set('globalOptions.colladaLoader', this.colladaLoader);
-        this.set('globalOptions.colladaServer', this.colladaServer);
-        this.set('globalOptions.url', this.url);
-        this.set('globalOptions.videoServer', this.videoServer);
+        var that = this;
+        this.debounce('updateGlobalOptions', function() {
+          that.set('globalOptions.clientId', that.clientId);
+          that.set('globalOptions.colladaLoader', that.colladaLoader);
+          that.set('globalOptions.colladaServer', that.colladaServer);
+          that.set('globalOptions.fixedFrame', that.fixedFrame);
+          that.set('globalOptions.url', that.url);
+          that.set('globalOptions.videoServer', that.videoServer);
+        }, 500);
       },
     });
   </script>

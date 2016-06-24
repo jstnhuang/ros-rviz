@@ -33,6 +33,7 @@
 
       observers: [
         '_optionsChanged(param, tfPrefix)',
+        '_fixedFrameChanged(globalOptions.fixedFrame)',
       ],
 
       ready: function() {
@@ -56,6 +57,21 @@
         if (this.viewer) {
           this.viewer.addObject(this._urdf);
         }
+      },
+
+      _fixedFrameChanged: function() {
+        this.tfClient = new ROSLIB.TFClient({
+          ros: this.ros,
+          angularThres: 0.01,
+          fixedFrame: this.globalOptions.fixedFrame,
+          transThres: 0.005,
+          rate: 20.0
+        });
+        this.hide();
+        var that = this;
+        this._updateDisplay(function() {
+          that.show();
+        });
       },
 
       _optionsChanged: function(param, tfPrefix) {
@@ -92,6 +108,7 @@
             console.warn('Unknown Collada loader', that.globalOptions.colladaLoader);
             loader = ROS3D.COLLADA_LOADER_2;
           }
+          that.hide();
           that._urdf = new ROS3D.Urdf({
             urdfModel: urdfModel,
             path: that.globalOptions.colladaServer,
