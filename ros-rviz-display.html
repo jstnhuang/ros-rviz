@@ -9,10 +9,11 @@
 <link rel="import" href="ros-rviz-depth-cloud.html">
 <link rel="import" href="ros-rviz-grid.html">
 <link rel="import" href="ros-rviz-interactive-markers.html">
+<link rel="import" href="ros-rviz-marker-array.html">
 <link rel="import" href="ros-rviz-markers.html">
 <link rel="import" href="ros-rviz-options.html">
-<link rel="import" href="ros-rviz-point-cloud.html">
 <link rel="import" href="ros-rviz-point-cloud-2.html">
+<link rel="import" href="ros-rviz-point-cloud.html">
 <link rel="import" href="ros-rviz-urdf.html">
 
 <dom-module id="ros-rviz-display">
@@ -105,6 +106,16 @@
           topic="{{options.topic}}"
           viewer="{{viewer}}"
         ></ros-rviz-markers>
+      </template>
+      <template is="dom-if" if="{{_typeIs('markerArray', type)}}">
+        <ros-rviz-marker-array id="display"
+          global-options="{{globalOptions}}"
+          is-shown="{{isShown}}"
+          ros="{{ros}}"
+          tf-client="{{tfClient}}"
+          topic="{{options.topic}}"
+          viewer="{{viewer}}"
+        ></ros-rviz-marker-array>
       </template>
       <template is="dom-if" if="{{_typeIs('pointCloud', type)}}">
         <ros-rviz-point-cloud id="display"
