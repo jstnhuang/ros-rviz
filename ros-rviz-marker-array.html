@@ -36,12 +36,10 @@
       },
 
       ready: function() {
-        console.log('ready');
         this.show();
       },
 
       destroy: function() {
-        console.log('destroy');
         for (var i in this._markers) {
           this._markers[i].unsubscribeTf();
         }
@@ -50,9 +48,7 @@
       },
 
       hide: function() {
-        console.log('hide');
         if (this.viewer) {
-          console.log(this._markers, this.viewer.scene.children);
           for (var i in this._markers) {
             this.viewer.scene.remove(this._markers[i]);
           }
@@ -60,7 +56,6 @@
       },
 
       show: function() {
-        console.log('show');
         this._updateDisplay();
         if (this.viewer) {
           for (var i in this._markers) {
