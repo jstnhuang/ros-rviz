@@ -246,6 +246,9 @@ Example:
         this.addEventListener('iron-resize', function() {
           that.resize();
         });
+        this.fire('viewerConstructed', {
+          viewer: this._viewer,
+        });
       },
 
       /**
