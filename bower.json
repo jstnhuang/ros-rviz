@@ -39,7 +39,8 @@
     "paper-toolbar": "PolymerElements/paper-toolbar#^1.1.7",
     "paper-tooltip": "PolymerElements/paper-tooltip#^1.1.2",
     "ros-service": "jstnhuang/ros-service#^1.0.1",
-    "ros-websocket": "jstnhuang/ros-websocket#^2.0.0"
+    "ros-websocket": "jstnhuang/ros-websocket#^2.0.0",
+    "ros3djs": "RobotWebTools/ros3djs#^0.17.0"
   },
   "devDependencies": {
     "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
