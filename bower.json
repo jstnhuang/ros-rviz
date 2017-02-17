@@ -1,6 +1,6 @@
 {
   "name": "ros-rviz",
-  "version": "0.9.3",
+  "version": "0.10.0",
   "authors": [
     "Justin Huang <jstn@cs.washington.edu>"
   ],
