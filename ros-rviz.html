@@ -221,7 +221,14 @@ Example:
 
       observers: [
         '_fixedFrameChanged(globalOptions.fixedFrame)',
+        '_backgroundChanged(globalOptions.background)',
       ],
+
+      _backgroundChanged: function(background) {
+        if (background && this._viewer) {
+          this._viewer.renderer.setClearColor(parseInt(background.replace('#', '0x'), 16), 1);
+        }
+      },
 
       _fixedFrameChanged: function(fixedFrame) {
         if (this.tfClient) {
@@ -233,7 +240,9 @@ Example:
       attached: function() {
         var width = this.$.viewer.offsetWidth;
         var height = this.$.viewer.offsetHeight;
+        var background = this.globalOptions.background;
         this._viewer = new ROS3D.Viewer({
+          background: background,
           divID: 'viewer',
           width: width,
           height: height,
