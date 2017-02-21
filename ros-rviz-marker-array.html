@@ -142,8 +142,8 @@
           }
           else if(message.action === 3) { // "DELETE ALL"
             for (var m in that._markers){
-              m.unsubscribeTf();
-              that.viewer.scene.remove(m);
+              that._markers[m].unsubscribeTf();
+              that.viewer.scene.remove(that._markers[m]);
             }
             that._markers = {};
           }
