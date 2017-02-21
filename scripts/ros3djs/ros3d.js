@@ -3283,6 +3283,7 @@ ROS3D.Particles = function(options) {
     'varying float falpha;',
     'void main() ',
     '{',
+    '    if (falpha < 0.5) discard;',
     '    // calculates a color for the particle',
     '    gl_FragColor = vec4( vColor, falpha );',
     '    // sets particle texture to desired color',
@@ -3310,7 +3311,6 @@ ROS3D.Particles = function(options) {
     vertexShader: this.vertex_shader,
     fragmentShader: this.fragment_shader,
     transparent: true,
-    alphaTest: 0.5
   });
 
   this.ps = new THREE.ParticleSystem(this.geom, this.shaderMaterial);
