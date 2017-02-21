@@ -43,6 +43,7 @@
       hide: function() {
         if (this.viewer) {
           for (var i in this._markers) {
+            this._markers[i].unsubscribeTf();
             this.viewer.scene.remove(this._markers[i]);
           }
         }
@@ -91,6 +92,7 @@
 
         var oldNode = that._markers[message.ns + message.id];
         if (oldNode) {
+          oldNode.unsubscribeTf();
           that.viewer.scene.remove(oldNode);
         }
 
