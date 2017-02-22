@@ -1,0 +1,431 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-collapse/iron-collapse.html">
+<link rel="import" href="../iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="../iron-resizable-behavior/iron-resizable-behavior.html">
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../paper-drawer-panel/paper-drawer-panel.html">
+<link rel="import" href="../paper-fab/paper-fab.html">
+<link rel="import" href="../paper-header-panel/paper-header-panel.html">
+<link rel="import" href="../paper-item/paper-item.html">
+<link rel="import" href="../paper-menu-button/paper-menu-button.html">
+<link rel="import" href="../paper-menu/paper-menu.html">
+<link rel="import" href="../paper-styles/color.html">
+<link rel="import" href="../paper-styles/typography.html">
+<link rel="import" href="../paper-toolbar/paper-toolbar.html">
+<link rel="import" href="../paper-tooltip/paper-tooltip.html">
+<link rel="import" href="imports.html">
+<link rel="import" href="ros-rviz-display.html">
+
+<!--
+A ROS visualization interface for the web.
+
+Example:
+
+    <ros-websocket url="{{websocketUrl}}" ros="{{ros}}"></ros-websocket>
+    <ros-rviz websocket-url="{{websocketUrl}}" ros="{{ros}}">
+    </ros-rviz>
+
+@demo demo/index.html
+@hero hero.svg
+-->
+
+<dom-module id="ros-rviz">
+  <template>
+    <style include="iron-flex iron-flex-alignment">
+    <style>
+      :host {
+        display: block;
+        height: 100%;
+        @apply(--paper-font-common-base);
+      }
+      #displays {
+        background-color: var(--paper-grey-50);
+        color: rgba(0, 0, 0, 0.87)
+      }
+      #displayHeader {
+        background-color: var(--paper-grey-300);
+        color: rgba(0, 0, 0, 0.87);
+      }
+      #addButton {
+        color: rgba(0, 0, 0, 0.87);
+        background-color: #ffc107;
+        position: relative;
+        top: 28px;
+        z-index: 2;
+      }
+      #container {
+        height: 100%;
+      }
+      #sidebar {
+        height: 100%;
+      }
+      #displays {
+        width: 300px;
+        height: 100%;
+      }
+      #viewer {
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+      }
+      #openDisplays {
+        position: absolute;
+        margin: 10px;
+        color: rgba(255, 255, 255, 0.87);
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+      #openDisplays:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+      }
+      paper-item {
+        --paper-item: {
+          cursor: pointer;
+        };
+      }
+    </style>
+    <div id="container" class="layout horizontal">
+      <iron-collapse id="sidebar" opened="{{sidebarOpened}}" horizontal>
+        <paper-header-panel mode="seamed" id="displays">
+          <paper-toolbar id="displayHeader">
+            <paper-icon-button id="closeDisplays" icon="arrow-back"
+              on-tap="_toggleDisplayList"></paper-icon-button>
+            <paper-tooltip position="right" animation-delay="0"
+              for="closeDisplays">Hide displays panel</paper-tooltip>
+            <span class="title">Displays</span>
+            <paper-tooltip position="bottom" animation-delay="0"
+              for="addButton">Add a display</paper-tooltip>
+            <paper-menu-button id="displayMenu">
+              <paper-fab icon="add" id="addButton" class="dropdown-trigger"></paper-fab>
+              <paper-menu id="displayPaperMenu" class="dropdown-content"
+                  on-tap="_onDisplaySelected">
+                <paper-item on-tap="addDepthCloud">Depth cloud</paper-item>
+                <paper-item on-tap="addGrid">Grid</paper-item>
+                <paper-item on-tap="addInteractiveMarkers">Interactive markers</paper-item>
+                <paper-item on-tap="addMarkers">Markers</paper-item>
+                <paper-item on-tap="addMarkerArray">Marker array</paper-item>
+                <paper-item on-tap="addPointCloud">Point cloud</paper-item>
+                <paper-item on-tap="addPointCloud2">Point cloud 2</paper-item>
+                <paper-item on-tap="addUrdf">Robot model</paper-item>
+              </paper-menu>
+            </paper-menu-button>
+          </paper-toolbar>
+          <div id="displayList" class="fit">
+            <ros-rviz-display
+              id="options"
+              global-options="{{globalOptions}}"
+              name="Global options"
+              permanent
+              type="globalOptions"
+            ></ros-rviz-display>
+            <template is="dom-repeat" items="{{displays}}" as="display">
+              <ros-rviz-display
+                global-options="{{globalOptions}}"
+                index="{{index}}"
+                is-shown="{{display.isShown}}"
+                on-delete-display="_deleteDisplay"
+                viewer="{{_viewer}}"
+                ros="{{ros}}"
+                tf-client="{{tfClient}}"
+                name="{{display.name}}"
+                options="{{display.options}}"
+                type="{{display.type}}"
+              ></ros-rviz-display>
+            </template>
+            <content></content>
+          </div>
+        </paper-header-panel>
+      </iron-collapse>
+      <paper-fab icon="menu" id="openDisplays"
+        hidden$="{{sidebarOpened}}" on-tap="_toggleDisplayList"></paper-fab>
+      <paper-tooltip position="right" animation-delay="0"
+        for="openDisplays">Open displays</paper-tooltip>
+      <div id="viewer" class="flex">
+      </div>
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'ros-rviz',
+
+      properties: {
+        globalOptions: {
+          type: Object,
+          value: function() {
+            return {};
+          },
+          notify: true,
+        },
+
+        /**
+         * A JSON object that specifies the configuration of the visualization.
+         * Example:
+         * {
+         *   globalOptions: { url: ...},
+         *   displays: [
+         *     { name: "Grid", type: "grid",
+         *       options: { numCells: 20 ...}
+         *     }
+         *   ]
+         * }
+         */
+        config: {
+          computed: '_computeConfig(globalOptions, displays, sidebarOpened)',
+          notify: true,
+          type: Object,
+        },
+
+        /**
+         * JavaScript representation of the display list.
+         * The format of the array is:
+         * ```
+         * [
+         *   {
+         *     isPermanent: true,
+         *     type: 'globalOptions',
+         *     name: 'Global Options',
+         *     options: {
+         *      websocketUrl: 'ws://localhost:9090'
+         *     },
+         *   }, {
+         *     type: 'grid',
+         *   }
+         * ]
+         * ```
+         */
+        displays: {
+          type: Array,
+          value: function() {
+            return [];
+          },
+        },
+        ros: {
+          type: Object,
+          observer: '_rosChanged',
+        },
+        sidebarOpened: {
+          type: Boolean,
+          value: true,
+        },
+        tfClient: Object, // The ROSLIB.TFClient
+        websocketUrl: {
+          type: String,
+          notify: true,
+          computed: '_computeWebsocketUrl(globalOptions.url)',
+        },
+        _viewer: Object, // The ROS3D viewer
+      },
+
+      behaviors: [Polymer.IronResizableBehavior],
+
+      observers: [
+        '_fixedFrameChanged(globalOptions.fixedFrame)',
+        '_backgroundChanged(globalOptions.background)',
+      ],
+
+      _backgroundChanged: function(background) {
+        if (background && this._viewer) {
+          this._viewer.renderer.setClearColor(parseInt(background.replace('#', '0x'), 16), 1);
+        }
+      },
+
+      _fixedFrameChanged: function(fixedFrame) {
+        if (this.tfClient) {
+          this.tfClient.fixedFrame = fixedFrame;
+          this.tfClient.updateGoal();
+        }
+      },
+
+      attached: function() {
+        var width = this.$.viewer.offsetWidth;
+        var height = this.$.viewer.offsetHeight;
+        var background = this.globalOptions.background;
+        this._viewer = new ROS3D.Viewer({
+          background: background,
+          divID: 'viewer',
+          width: width,
+          height: height,
+          antialias: true
+        });
+        var that = this;
+        window.setTimeout(function() {
+          that.resize()
+        }, 100);
+        this.addEventListener('iron-resize', function() {
+          that.resize();
+        });
+        this.fire('viewerConstructed', {
+          viewer: this._viewer,
+        });
+      },
+
+      /**
+       * Adds a grid display to the visualization.
+       * This can be done manually through the UI.
+       */
+      addGrid: function() {
+        this.push('displays', {
+          isShown: true,
+          name: 'Grid',
+          options: {
+            cellSize: 1,
+            color: '#cccccc',
+            numCells: 10,
+          },
+          type: 'grid',
+        });
+      },
+
+      addInteractiveMarkers: function() {
+        this.push('displays', {
+          isShown: true,
+          name: 'Interactive Markers',
+          options: {
+            topic: '/basic_controls',
+          },
+          type: 'interactiveMarkers',
+        });
+      },
+
+      addMarkers: function() {
+        this.push('displays', {
+          isShown: true,
+          name: 'Markers',
+          options: {
+            topic: '/visualization_marker',
+          },
+          type: 'markers',
+        });
+      },
+
+      addMarkerArray: function() {
+        this.push('displays', {
+          isShown: true,
+          name: 'Marker array',
+          options: {
+            topic: '/visualization_marker_array',
+          },
+          type: 'markerArray',
+        });
+      },
+
+      addDepthCloud: function() {
+        this.push('displays', {
+          isShown: true,
+          name: 'Depth cloud',
+          options: {
+            colorTopic: '/head_mount_kinect/rgb/image_rect_color',
+            depthTopic: '/head_mount_kinect/depth_registered/image_raw',
+            frameId: '/head_mount_kinect_rgb_optical_frame',
+          },
+          type: 'depthCloud',
+        });
+      },
+
+      addPointCloud: function() {
+        this.push('displays', {
+          isShown: true,
+          name: 'Point cloud',
+          options: {
+            topic: '/head_mount_kinect/depth_registered/points',
+          },
+          type: 'pointCloud',
+        });
+      },
+
+      addPointCloud2: function() {
+        this.push('displays', {
+          isShown: true,
+          name: 'Point cloud 2',
+          options: {
+            topic: '/head_mount_kinect/depth_registered/points',
+            size: 0.01,
+          },
+          type: 'pointCloud2',
+        });
+      },
+
+      /**
+       * Adds a robot model to the visualization.
+       * This can be done manually through the UI.
+       */
+      addUrdf: function() {
+        this.push('displays', {
+          isShown: true,
+          name: 'Robot model',
+          options: {
+            param: 'robot_description',
+            tfPrefix: '',
+          },
+          type: 'urdf',
+        });
+      },
+
+      loadConfig: function(config) {
+        if (config.globalOptions) {
+          this.$.options.loadConfig(config.globalOptions);
+        }
+        var domDisplays = this.$.displayList.querySelectorAll('ros-rviz-display'); 
+        for (var d=0; d<domDisplays.length; ++d) {
+          var display = domDisplays[d];
+          display.hide();
+          display.destroy();
+        }
+        this.splice('displays', 0);
+        if (config.displays) {
+          for (var i=0; i<config.displays.length; ++i) {
+            var displayConfig = config.displays[i];
+            this.push('displays', displayConfig);
+          }
+        }
+        if (typeof(config.sidebarOpened) === 'boolean') {
+          this.sidebarOpened = config.sidebarOpened;
+        }
+      },
+
+      resize: function() {
+        if (this._viewer) {
+          var width = this.$.viewer.offsetWidth;
+          var height = this.$.viewer.offsetHeight;
+          this._viewer.resize(width, height);
+        }
+      },
+
+      _computeConfig: function(globalOptions, displays, sidebarOpened) {
+        return {
+          globalOptions: globalOptions,
+          displays: displays,
+          sidebarOpened: sidebarOpened,
+        };  
+      },
+
+      _computeWebsocketUrl: function(url) {
+        return url;
+      },
+
+      _deleteDisplay: function(evt) {
+        var index = evt.detail.index;
+        this.splice('displays', index, 1);
+      },
+
+      _onDisplaySelected: function() {
+        this.$.displayPaperMenu.selected = undefined;
+      },
+
+      _rosChanged: function() {
+        this.tfClient = new ROSLIB.TFClient({
+          ros: this.ros,
+          angularThres: 0.01,
+          fixedFrame: this.globalOptions.fixedFrame,
+          transThres: 0.005,
+          rate: 20.0
+        });
+      },
+
+      _toggleDisplayList: function() {
+        this.$.sidebar.toggle();
+      },
+    });
+  </script>
+</dom-module>

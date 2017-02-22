@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>ros-service Demo</title>
+    <script src="../../webcomponentsjs/webcomponents-lite.min.js"></script>
+    <link rel="import" href="../ros-service.html">
+    <link rel="import" href="../../ros-websocket/ros-websocket.html">
+  </head>
+  <body unresolved>
+    <template id="t" is="dom-bind">
+      <p>Check the JavaScript console to see if you're connected to the websocket server.</p>
+      <div>
+        <input type="text" id="urlInput" value="ws://localhost:9090"></input>
+        <input id="connectButton" type="button" value="Connect"></input>
+      </div>
+      <p>
+        Run <code>rosrun rospy_tutorials add_two_ints_server</code> as well as the websocket server to try the demo below.
+        Try calling the service without the server to see an error get logged in the console.
+      </p>
+      <div>
+        <input type="text" id="aInput" value="1"></input> + 
+        <input type="text" id="bInput" value="2"></input>
+        <input id="callButton" type="button" value="Call service"></input><br />
+        Answer: {{result.sum}}
+      </div>
+      <ros-websocket auto id="ros" ros="{{ros}}"></ros-websocket>
+      <ros-service
+        id="service"
+        last-response="{{result}}"
+        on-fail="handleError"
+        name="/add_two_ints"
+        ros="{{ros}}"
+        service-type="rospy_tutorials/AddTwoInts"
+      ></ros-service>
+    </template>
+
+    <script>
+      var t = document.querySelector('#t');
+      t.addEventListener('dom-change', function() {
+        var rosElement = t.$.ros;
+        rosElement.addEventListener('connection', function() {
+          console.log('Connected to the websocket server.');
+        });
+        rosElement.addEventListener('error', function(error) {
+          console.log('Error connecting to the websocket server:', error);
+        });
+        rosElement.addEventListener('close', function() {
+          console.log('Connection to websocket server closed.');
+        });
+        t.$.connectButton.addEventListener('click', function() {
+          rosElement.url = document.querySelector('#urlInput').value;
+        });
+
+        var seedElement = t.$.service;
+        t.handleError = function(evt) {
+          console.error(evt.detail);
+        }
+        t.$.callButton.addEventListener('click', function() {
+          var request = {
+            a: parseInt(t.$.aInput.value),
+            b: parseInt(t.$.bInput.value)
+          };
+          seedElement.call(request);
+        });
+      });
+    </script>
+  </body>
+</html>

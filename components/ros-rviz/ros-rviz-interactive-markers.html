@@ -1,0 +1,79 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="imports.html">
+
+<dom-module id="ros-rviz-interactive-markers">
+  <template>
+    <paper-input label="Interactive marker topic" on-blur="_updateDisplay" value="{{topic}}"></paper-input>
+  </template>
+  <script>
+    Polymer({
+      is: 'ros-rviz-interactive-markers',
+
+      properties: {
+        globalOptions: Object,
+        name: {
+          type: String,
+          value: 'Interactive Markers',
+        },
+        ros: Object,
+        tfClient: Object,
+        topic: {
+          type: String,
+          value: '/basic_controls',
+        },
+        viewer: Object,
+        _client: {
+          type: Object,
+          value: null
+        },
+      },
+
+      ready: function() {
+        this._updateDisplay();
+        this.show();
+      },
+
+      destroy: function() {
+        // Nothing to destroy.
+      },
+
+      hide: function() {
+        if (this._client) {
+          this._client.unsubscribe();
+        }
+      },
+
+      show: function() {
+        if (this._client) {
+          this._client.subscribe(this.topic);
+        }
+      },
+
+      _updateDisplay: function() {
+        var that = this;
+        if (this._client) {
+          this._client.unsubscribe();
+        }
+        var loader = ROS3D.COLLADA_LOADER_2;
+        if (that.globalOptions.colladaLoader === 'collada') {
+          loader = ROS3D.COLLADA_LOADER;
+        } else if (that.globalOptions.colladaLoader === 'collada2') {
+          loader = ROS3D.COLLADA_LOADER_2;
+        } else {
+          console.warn('Unknown Collada loader', that.globalOptions.colladaLoader);
+          loader = ROS3D.COLLADA_LOADER_2;
+        }
+        this._client = new ROS3D.InteractiveMarkerClient({
+          loader: loader,
+          path: this.globalOptions.colladaServer,
+          ros: this.ros,
+          tfClient: this.tfClient,
+          topic: this.topic,
+          camera: this.viewer.camera,
+          rootObject: this.viewer.selectableObjects,
+        });
+      },
+    });
+  </script>
+</dom-module>

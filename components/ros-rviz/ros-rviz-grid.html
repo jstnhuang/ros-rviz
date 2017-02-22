@@ -1,0 +1,82 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="imports.html">
+
+<dom-module id="ros-rviz-grid">
+  <template>
+    <paper-input label="Cell size (m)" value="{{cellSize}}"></paper-input>
+    <paper-input label="Color" value="{{color}}"></paper-input>
+    <paper-input label="# cells per side" value="{{numCells}}"></paper-input>
+  </template>
+  <script>
+    Polymer({
+      is: 'ros-rviz-grid',
+
+      properties: {
+        cellSize: {
+          notify: true,
+          type: Number,
+          value: 1,
+        },
+        color: {
+          type: String,
+          value: '#cccccc',
+          notify: true,
+        },
+        name: {
+          type: String,
+          value: 'Grid',
+        },
+        numCells: {
+          notify: true,
+          type: Number,
+          value: 10,
+        },
+        viewer: {
+          type: Object,
+        },
+        _grid: Object,
+      },
+
+      observers: [
+        '_optionsChanged(cellSize, color, numCells)',
+      ],
+
+      ready: function() {
+        this._updateGrid();
+        this.show();
+      },
+
+      destroy: function() {
+        // Nothing to destroy.
+      },
+
+      hide: function() {
+        if (this.viewer) {
+          this.viewer.scene.remove(this._grid);
+        }
+      },
+
+      show: function() {
+        if (this.viewer) {
+          this.viewer.addObject(this._grid);
+        }
+      },
+
+      _optionsChanged: function(cellSize, color, numCells) {
+        this.hide();
+        this._updateGrid();
+        this.show();
+      },
+
+      _updateGrid: function() {
+        this._grid = new ROS3D.Grid({
+          cellSize: this.cellSize,
+          color: this.color,
+          lineWidth: this.lineWidth,
+          num_cells: this.numCells,
+        });
+      },
+    });
+  </script>
+</dom-module>

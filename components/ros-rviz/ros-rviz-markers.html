@@ -1,0 +1,110 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="imports.html">
+
+<dom-module id="ros-rviz-markers">
+  <template>
+    <paper-input label="Marker topic" on-blur="_updateDisplay" value="{{topic}}"></paper-input>
+  </template>
+  <script>
+    Polymer({
+      is: 'ros-rviz-markers',
+
+      properties: {
+        globalOptions: Object,
+        isShown: Boolean,
+        name: {
+          type: String,
+          value: 'Markers',
+        },
+        ros: Object,
+        tfClient: Object,
+        topic: {
+          type: String,
+          value: '/visualization_marker',
+        },
+        viewer: Object,
+        _markers: {
+          type: Object, // {ns+id -- Marker}
+          value: function() { return {}; }
+        },
+        _topic: Object,
+      },
+
+      ready: function() {
+        this._updateDisplay();
+        this.show();
+      },
+
+      destroy: function() {
+        this._topic.unsubscribe(); 
+      },
+
+      hide: function() {
+        if (this.viewer) {
+          for (var i in this._markers) {
+            this._markers[i].unsubscribeTf();
+            this.viewer.scene.remove(this._markers[i]);
+          }
+        }
+      },
+
+      show: function() {
+        if (this.viewer) {
+          for (var i in this._markers) {
+            this.viewer.addObject(this._markers[i]);
+          }
+        }
+      },
+
+      _updateDisplay: function() {
+        var that = this;
+        if (this._topic) {
+          this._topic.unsubscribe();
+        }
+        this._topic = new ROSLIB.Topic({
+          ros: this.ros,
+          name: this.topic,
+          messageType: 'visualization_msgs/Marker',
+          compression: 'png'
+        });
+        this._topic.subscribe(function(message) {
+          that._msgCallback(that, message);
+        });
+      },
+
+      _msgCallback: function(that, message) {
+        var loader = ROS3D.COLLADA_LOADER_2;
+        if (that.globalOptions.colladaLoader === 'collada') {
+          loader = ROS3D.COLLADA_LOADER;
+        } else if (that.globalOptions.colladaLoader === 'collada2') {
+          loader = ROS3D.COLLADA_LOADER_2;
+        } else {
+          console.warn('Unknown Collada loader', that.globalOptions.colladaLoader);
+          loader = ROS3D.COLLADA_LOADER_2;
+        }
+
+        var newMarker = new ROS3D.Marker({
+          message: message,
+          path: that.globalOptions.colladaServer,
+          loader: loader
+        });
+
+        var oldNode = that._markers[message.ns + message.id];
+        if (oldNode) {
+          oldNode.unsubscribeTf();
+          that.viewer.scene.remove(oldNode);
+        }
+
+        that._markers[message.ns + message.id] = new ROS3D.SceneNode({
+          frameID: message.header.frame_id,
+          tfClient: that.tfClient,
+          object: newMarker
+        });
+        if (that.isShown) {
+          that.viewer.addObject(that._markers[message.ns + message.id]);
+        }
+      },
+    });
+  </script>
+</dom-module>

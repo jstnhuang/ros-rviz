@@ -1,0 +1,26 @@
+{
+  "name": "ros-websocket",
+  "version": "2.0.0",
+  "authors": [
+    "Justin Huang <jstn@cs.washington.edu>"
+  ],
+  "description": "An element for using roslibjs.",
+  "keywords": [
+    "web-component",
+    "polymer",
+    "ros"
+  ],
+  "main": "ros-websocket.html",
+  "license": "https://opensource.org/licenses/MIT",
+  "homepage": "https://github.com/jstnhuang/ros-websocket",
+  "ignore": [
+    "/.*",
+    "/test/"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#^1.2.0"
+  },
+  "devDependencies": {
+    "iron-component-page": "PolymerElements/iron-component-page#^1.0.0"
+  }
+}

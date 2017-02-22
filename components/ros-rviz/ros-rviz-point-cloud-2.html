@@ -1,0 +1,93 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="imports.html">
+
+<dom-module id="ros-rviz-point-cloud-2">
+  <template>
+    <paper-input label="Topic" value="{{topic}}"></paper-input>
+    <paper-input label="Size" value="{{size}}"></paper-input>
+  </template>
+  <script>
+    Polymer({
+      is: 'ros-rviz-point-cloud-2',
+
+      properties: {
+        name: {
+          type: String,
+          value: 'Point cloud 2',
+        },
+        topic: {
+          type: String,
+          value: '/head_mount_kinect/depth_registered/points',
+          notify: true, 
+        },
+        size: {
+          type: Number,
+          value: 0.01,
+          notify: true,
+        },
+        globalOptions: Object,
+        ros: Object,
+        tfClient: Object,
+        viewer: Object,
+        _pc2: Object,
+      },
+
+      observers: [
+        '_optionsChanged(topic, size)',
+      ],
+
+      ready: function() {
+        var that = this;
+        this.show();
+      },
+
+      destroy: function() {
+        if (this._pc2) {
+          this._pc2.unsubscribe();
+          this.viewer.scene.remove(this._pc2.particles.sn);
+          delete this._pc2;
+        }
+      },
+
+      hide: function() {
+        if (this._pc2) {
+          this._pc2.unsubscribe();
+          this.viewer.scene.remove(this._pc2.particles.sn);
+          delete this._pc2;
+        }
+      },
+
+      show: function() {
+        this._updateDisplay();
+      },
+
+      _optionsChanged: function(topic) {
+        var that = this;
+        this.debounce('updateForOptions', function() {
+          that.hide();
+          that.show();
+        }, 200);
+      },
+
+      _updateDisplay: function(callback) {
+        if (!(this.ros && this.tfClient && this.topic)) {
+          return;
+        }
+        if (this._pc2) {
+          delete this._pc2;
+        }
+        var that = this;
+        this._pc2 = new ROS3D.PointCloud2({
+          ros: this.ros,
+          topic: this.topic,
+          size: this.size,
+          tfClient: this.tfClient,
+          rootObject: this.viewer.scene
+        });
+
+        callback && callback();
+      },
+    });
+  </script>
+</dom-module>

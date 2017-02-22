@@ -1,0 +1,173 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../ros-service/ros-service.html">
+<link rel="import" href="imports.html">
+
+<!--
+  Version that takes in a point cloud topic.
+-->
+<dom-module id="ros-rviz-point-cloud">
+  <template>
+    <ros-service
+     id="startPcService"
+     on-response="_onPcStart"
+     on-fail="_onPcStartFail"
+     name="/start_point_cloud"
+     ros="{{ros}}"
+     service-type="rws_rviz/StartPointCloud"
+    ></ros-service>
+    <ros-service
+     id="stopPcService"
+     name="/stop_point_cloud"
+     on-fail="_onPcStopFail"
+     ros="{{ros}}"
+     service-type="rws_rviz/StopPointCloud"
+    ></ros-service>
+    <paper-input label="Topic" value="{{topic}}" on-blur="_onOptionsChanged"></paper-input>
+    <paper-input label="Camera frame ID" value="{{frameId}}" on-blur="_onOptionsChanged"></paper-input>
+  </template>
+  <script>
+    Polymer({
+      is: 'ros-rviz-point-cloud',
+
+      properties: {
+        topic: {
+          type: String,
+          value: '/head_mount_kinect/depth_registered/points'
+        },
+        frameId: {
+          type: String,
+          value: '/head_mount_kinect_rgb_optical_frame',
+        },
+        globalOptions: Object,
+        name: {
+          type: String,
+          value: 'Point cloud',
+        },
+        tfClient: Object,
+        viewer: Object,
+        ros: Object,
+        _cloud: {
+          type: Object,
+          value: null
+        },
+        _oldTopic: String,
+        _sceneNode: Object,
+        _url: String,
+        _urlTopic: String, // Backend image topic to stream.
+      },
+
+      ready: function() {
+        this._updateStream();
+        var that = this;
+        window.addEventListener('beforeunload', function(evt) {
+          that._endStream();
+        });
+        this.show();
+      },
+
+      destroy: function() {
+        if (this._cloud) {
+          this._cloud.stopStream(); 
+        }
+        this._endStream();
+        if (this._sceneNode) {
+          this.viewer.scene.remove(this._sceneNode);
+          delete this._sceneNode;
+        }
+      },
+
+      hide: function() {
+        if (this._cloud) {
+          this._cloud.stopStream();
+        }
+        if (this._sceneNode) {
+          this.viewer.scene.remove(this._sceneNode);
+        }
+      },
+
+      show: function() {
+        if (this._cloud) {
+          this._cloud.startStream();
+        }
+        if (this._sceneNode) {
+          this.viewer.scene.add(this._sceneNode);
+        }
+      },
+
+      _updateDisplay: function() {
+        var that = this;
+        if (this._cloud) {
+          this._cloud.stopStream();
+        }
+        if (!this._url) {
+          return;
+        }
+        this._cloud = new ROS3D.DepthCloud({
+          url: this._url,
+          f: 525.0,
+        });
+        this._cloud.startStream();
+
+        this._sceneNode = new ROS3D.SceneNode({
+          frameID: this.frameId,
+          tfClient: this.tfClient,
+          object: this._cloud,
+        });
+
+        // TODO(jstn): I just tried this and it seemed to work.
+        // Get a real understanding of what's going wrong.
+        this._sceneNode.scale.x = 0.5;
+        this._sceneNode.scale.y = 0.5;
+        this._sceneNode.scale.z = 0.5;
+
+        this.viewer.scene.add(this._sceneNode);
+      },
+
+      _computeUrl: function(_urlTopic) {
+        var url = this.globalOptions.videoServer + '/streams' + _urlTopic + '.webm?enc=webm&bitrate=250000&framerate=15';
+        return url;
+      },
+
+      _onPcStart: function(evt) {
+        this._urlTopic = evt.detail.topic;
+        this._url = this._computeUrl(this._urlTopic);
+        this._updateDisplay();
+      },
+
+      _onOptionsChanged: function() {
+        this._updateStream();
+      },
+
+      _updateStream: function() {
+        this._endStream(); 
+        if (!this.topic) {
+          return;
+        }
+        this._oldTopic = this.topic;
+        this.$.startPcService.call({
+          topic: this.topic,
+          camera_frame_id: this.frameId,
+          client_id: this.globalOptions.clientId
+        });
+      },
+
+      _endStream: function() {
+        if (this._oldTopic) {
+          this.$.stopPcService.call({
+            topic: this._oldTopic,
+            client_id: this.globalOptions.clientId
+          });
+        }
+      },
+
+      _onPcStartFail: function(evt) {
+        console.error('Error starting point cloud stream', evt.detail);
+      },
+
+      _onPcStopFail: function(evt) {
+        console.error('Error stopping point cloud stream', evt.detail);
+      }
+    });
+  </script>
+</dom-module>

@@ -1,0 +1,115 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="imports.html">
+
+<dom-module id="ros-rviz-urdf">
+  <template>
+    <paper-input label="Robot description topic" value="{{param}}"></paper-input>
+    <paper-input label="TF prefix" value="{{tfPrefix}}"></paper-input>
+  </template>
+  <script>
+    Polymer({
+      is: 'ros-rviz-urdf',
+
+      properties: {
+        name: {
+          type: String,
+          value: 'Robot model',
+        },
+        param: {
+          type: String,
+          value: 'robot_description'
+        },
+        globalOptions: Object,
+        ros: Object,
+        tfClient: Object,
+        tfPrefix: {
+          type: String,
+          value: '',
+        },
+        viewer: Object,
+        _urdf: Object,
+      },
+
+      observers: [
+        '_optionsChanged(param)',
+        '_tfPrefixChanged(tfPrefix)',
+      ],
+
+      ready: function() {
+        var that = this;
+        this._updateDisplay(function() {
+          that.show();
+        });
+      },
+
+      destroy: function() {
+        // Nothing to destroy.
+      },
+
+      hide: function() {
+        if (this.viewer) {
+          this.viewer.scene.remove(this._urdf);
+        }
+      },
+
+      show: function() {
+        if (this.viewer) {
+          this.viewer.addObject(this._urdf);
+        }
+      },
+
+      _optionsChanged: function(param) {
+        var that = this;
+        this.debounce('updateForOptions', function() {
+          that.hide();
+          that._updateDisplay(function() {
+            that.show();
+          });
+        }, 1000);
+      },
+
+      _tfPrefixChanged: function(tfPrefix) {
+        if (this._urdf) {
+          this._urdf.updateTfPrefix(tfPrefix);
+        }
+      },
+
+      _updateDisplay: function(callback) {
+        if (!(this.ros && this.tfClient && this.param
+              && this.globalOptions.colladaLoader
+              && this.globalOptions.colladaServer)) {
+          return;
+        }
+        var getParam = new ROSLIB.Param({
+          ros: this.ros,
+          name: this.param
+        });
+        var that = this;
+        getParam.get(function(string) {
+          var urdfModel = new ROSLIB.UrdfModel({
+            string: string
+          });
+          var loader = ROS3D.COLLADA_LOADER_2;
+          if (that.globalOptions.colladaLoader === 'collada') {
+            loader = ROS3D.COLLADA_LOADER;
+          } else if (that.globalOptions.colladaLoader === 'collada2') {
+            loader = ROS3D.COLLADA_LOADER_2;
+          } else {
+            console.warn('Unknown Collada loader', that.globalOptions.colladaLoader);
+            loader = ROS3D.COLLADA_LOADER_2;
+          }
+          that.hide();
+          that._urdf = new ROS3D.Urdf({
+            urdfModel: urdfModel,
+            path: that.globalOptions.colladaServer,
+            tfClient: that.tfClient,
+            tfPrefix: that.tfPrefix,
+            loader: loader
+          });
+          callback && callback();
+        });
+      },
+    });
+  </script>
+</dom-module>

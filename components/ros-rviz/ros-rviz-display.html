@@ -1,0 +1,239 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-collapse/iron-collapse.html">
+<link rel="import" href="../iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../paper-styles/color.html">
+<link rel="import" href="../paper-styles/typography.html">
+<link rel="import" href="../paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../paper-icon-button/paper-icon-button.html">
+<link rel="import" href="imports.html">
+<link rel="import" href="ros-rviz-depth-cloud.html">
+<link rel="import" href="ros-rviz-grid.html">
+<link rel="import" href="ros-rviz-interactive-markers.html">
+<link rel="import" href="ros-rviz-marker-array.html">
+<link rel="import" href="ros-rviz-markers.html">
+<link rel="import" href="ros-rviz-options.html">
+<link rel="import" href="ros-rviz-point-cloud-2.html">
+<link rel="import" href="ros-rviz-point-cloud.html">
+<link rel="import" href="ros-rviz-urdf.html">
+
+<dom-module id="ros-rviz-display">
+  <template>
+    <style include="iron-flex iron-flex-alignment"></style>
+    <style>
+      :host {
+        display: block;
+      }
+      h1 {
+        @apply(--paper-font-subhead);
+      }
+      paper-checkbox {
+        display: inline;
+      }
+      #collapse {
+        padding: 0px 10px;
+      }
+      #header {
+        cursor: pointer;
+        padding: 0px 10px;
+      }
+      #header:hover {
+        background-color: var(--paper-grey-200);
+      }
+      #deleteButton {
+        color: var(--paper-grey-500);
+      }
+      #deleteButton:hover {
+        color: var(--paper-red-500);
+      }
+    </style>
+    <div class="layout horizontal" id="header" on-tap="_toggleCollapse">
+      <template is="dom-if" if="{{!permanent}}">
+        <paper-checkbox checked="{{isShown}}" on-tap="_handleCheckbox">
+          <h1>{{name}}</h1>
+        </paper-checkbox>
+      </template>
+      <template is="dom-if" if="{{permanent}}">
+        <h1>{{name}}</h1>
+      </template>
+      <div class="flex"></div>
+      <paper-icon-button id="deleteButton" icon="cancel" on-tap="destroy"
+        hidden$="{{permanent}}"></paper-icon-button>
+    </div>
+    <iron-collapse id="collapse">
+      <template is="dom-if" if="{{_typeIs('globalOptions', type)}}">
+        <ros-rviz-options id="display"
+          global-options="{{globalOptions}}"
+        ></ros-rviz-options>
+      </template>
+      <template is="dom-if" if="{{_typeIs('grid', type)}}">
+        <ros-rviz-grid id="display"
+          cell-size="{{options.cellSize}}"
+          color="{{options.color}}"
+          global-options="{{globalOptions}}"
+          is-shown="{{isShown}}"
+          num-cells="{{options.numCells}}"
+          viewer="{{viewer}}"
+        ></ros-rviz-grid>
+      </template>
+      <template is="dom-if" if="{{_typeIs('depthCloud', type)}}">
+        <ros-rviz-depth-cloud id="display"
+          color-topic="{{options.colorTopic}}"
+          depth-topic="{{options.depthTopic}}"
+          frame-id="{{options.frameId}}"
+          global-options="{{globalOptions}}"
+          is-shown="{{isShown}}"
+          ros="{{ros}}"
+          tf-client="{{tfClient}}"
+          viewer="{{viewer}}"
+        ></ros-rviz-depth-cloud>
+      </template>
+      <template is="dom-if" if="{{_typeIs('interactiveMarkers', type)}}">
+        <ros-rviz-interactive-markers id="display"
+          global-options="{{globalOptions}}"
+          is-shown="{{isShown}}"
+          ros="{{ros}}"
+          tf-client="{{tfClient}}"
+          topic="{{options.topic}}"
+          viewer="{{viewer}}"
+        ></ros-rviz-interactive-markers>
+      </template>
+      <template is="dom-if" if="{{_typeIs('markers', type)}}">
+        <ros-rviz-markers id="display"
+          global-options="{{globalOptions}}"
+          is-shown="{{isShown}}"
+          ros="{{ros}}"
+          tf-client="{{tfClient}}"
+          topic="{{options.topic}}"
+          viewer="{{viewer}}"
+        ></ros-rviz-markers>
+      </template>
+      <template is="dom-if" if="{{_typeIs('markerArray', type)}}">
+        <ros-rviz-marker-array id="display"
+          global-options="{{globalOptions}}"
+          is-shown="{{isShown}}"
+          ros="{{ros}}"
+          tf-client="{{tfClient}}"
+          topic="{{options.topic}}"
+          viewer="{{viewer}}"
+        ></ros-rviz-marker-array>
+      </template>
+      <template is="dom-if" if="{{_typeIs('pointCloud', type)}}">
+        <ros-rviz-point-cloud id="display"
+          global-options="{{globalOptions}}"
+          is-shown="{{isShown}}"
+          ros="{{ros}}"
+          tf-client="{{tfClient}}"
+          topic="{{options.topic}}"
+          viewer="{{viewer}}"
+        ></ros-rviz-point-cloud>
+      </template>
+      <template is="dom-if" if="{{_typeIs('pointCloud2', type)}}">
+        <ros-rviz-point-cloud-2 id="display"
+          global-options="{{globalOptions}}"
+          is-shown="{{isShown}}"
+          ros="{{ros}}"
+          size="{{options.size}}"
+          tf-client="{{tfClient}}"
+          topic="{{options.topic}}"
+          viewer="{{viewer}}"
+        ></ros-rviz-point-cloud-2>
+      </template>
+      <template is="dom-if" if="{{_typeIs('urdf', type)}}">
+        <ros-rviz-urdf id="display"
+          global-options="{{globalOptions}}"
+          is-shown="{{isShown}}"
+          param="{{options.param}}"
+          ros="{{ros}}"
+          tf-client="{{tfClient}}"
+          tf-prefix="{{options.tfPrefix}}"
+          viewer="{{viewer}}"
+        ></ros-rviz-urdf>
+      </template>
+    </iron-collapse>
+  </template>
+  <script>
+    Polymer({
+      is: 'ros-rviz-display',
+
+      properties: {
+        display: Object,
+        name: String,
+        index: Number,
+        isShown: {
+          type: Boolean,
+          value: true,
+          observer: '_onIsShownChanged',
+        },
+        globalOptions: Object,
+        /**
+         * Options for this type of display.
+         * It is left up to the display type to interpret the options.
+         */
+        options: {
+          type: Object,
+          value: function() {
+            return {};
+          },
+        },
+        permanent: {
+          type: Boolean,
+          value: false
+        },
+        ros: Object,
+        tfClient: Object,
+        type: {
+          type: String,
+        },
+        viewer: Object,
+      },
+
+      show: function() {
+        this.isShown = true;
+      },
+
+      destroy: function() {
+        if (!this.permanent) {
+          var display = this.$$('#display');
+          display.hide();
+          display.destroy();
+          this.fire('delete-display', {index: this.index});
+        }
+      },
+
+      hide: function() {
+        if (!this.permanent) {
+          this.isShown = false;
+        }
+      },
+
+      // Currently only used by global options display.
+      loadConfig: function(config) {
+        var display = this.$$('#display');
+        if (display && display.loadConfig) {
+          display.loadConfig(config);
+        }
+      },
+
+      _handleCheckbox: function(evt) {
+        evt.stopPropagation();
+      },
+
+      _onIsShownChanged: function() {
+        var display = this.$$('#display');
+        if (this.isShown && display) {
+          display.show();
+        } else if (!this.isShown && display) {
+          display.hide();
+        }
+      },
+
+      _toggleCollapse: function() {
+        this.$.collapse.toggle();
+      },
+
+      _typeIs: function(candidate, actual) {
+        return candidate === actual;
+      },
+    });
+  </script>
+</dom-module>

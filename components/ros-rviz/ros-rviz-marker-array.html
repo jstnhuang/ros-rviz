@@ -1,0 +1,157 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="imports.html">
+
+<dom-module id="ros-rviz-marker-array">
+  <template>
+    <paper-input label="Marker array topic" on-blur="_topicChanged" value="{{topic}}"></paper-input>
+  </template>
+  <script>
+    Polymer({
+      is: 'ros-rviz-marker-array',
+
+      properties: {
+        globalOptions: Object,
+        isShown: Boolean,
+        name: {
+          type: String,
+          value: 'Marker array',
+        },
+        ros: Object,
+        tfClient: Object,
+        topic: {
+          type: String,
+          value: '/visualization_marker_array',
+        },
+        viewer: Object,
+        _markers: {
+          type: Object, // {ns+'_'+id -- Marker}
+          value: function() { return {}; }
+        },
+        _topic: Object,
+        _lastRenderedTopic: {
+          type: String,
+          value: ''
+        },
+      },
+
+      ready: function() {
+        this.show();
+      },
+
+      destroy: function() {
+        for (var i in this._markers) {
+          this._markers[i].unsubscribeTf();
+        }
+        this._markers = {};
+        this._topic.unsubscribe(); 
+      },
+
+      hide: function() {
+        if (this.viewer) {
+          for (var i in this._markers) {
+            this.viewer.scene.remove(this._markers[i]);
+          }
+        }
+      },
+
+      show: function() {
+        this._updateDisplay();
+        if (this.viewer) {
+          for (var i in this._markers) {
+            if (this.isShown) {
+              this.viewer.addObject(this._markers[i]);
+            }
+          }
+        }
+      },
+
+      _topicChanged: function() {
+        if (this.topic !== this._lastRenderedTopic) {
+          this.hide();
+          for (var i in this._markers) {
+            this._markers[i].unsubscribeTf();
+          }
+          this._markers = {};
+          this._updateDisplay();
+        }
+      },
+
+      _updateDisplay: function() {
+        var that = this;
+        if (this._topic) {
+          this._topic.unsubscribe();
+        }
+        this._topic = new ROSLIB.Topic({
+          ros: this.ros,
+          name: this.topic,
+          messageType: 'visualization_msgs/MarkerArray',
+          compression: 'png'
+        });
+        this._topic.subscribe(function(arrayMessage) {
+          that._msgCallback(that, arrayMessage);
+        });
+        this._lastRenderedTopic = this.topic;
+      },
+
+      _msgCallback: function(that, arrayMessage) {
+        var loader = ROS3D.COLLADA_LOADER_2;
+        if (that.globalOptions.colladaLoader === 'collada') {
+          loader = ROS3D.COLLADA_LOADER;
+        } else if (that.globalOptions.colladaLoader === 'collada2') {
+          loader = ROS3D.COLLADA_LOADER_2;
+        } else {
+          console.warn('Unknown Collada loader', that.globalOptions.colladaLoader);
+          loader = ROS3D.COLLADA_LOADER_2;
+        }
+        var path = that.globalOptions.colladaServer;
+
+        arrayMessage.markers.forEach(function(message) {
+          if(message.action === 0) {
+            var updated = false;
+            if(message.ns + '_' + message.id in that._markers) { // "MODIFY"
+              updated = that._markers[message.ns + '_' + message.id].children[0].update(message);
+              if(!updated) { // "REMOVE"
+                that._markers[message.ns + '_' + message.id].unsubscribeTf();
+                that.viewer.scene.remove(that._markers[message.ns + '_' + message.id]);
+              }
+            }
+            if(!updated) { // "ADD"
+              var newMarker = new ROS3D.Marker({
+                message: message,
+                path: path,
+                loader: loader
+              });
+              that._markers[message.ns + '_' + message.id] = new ROS3D.SceneNode({
+                frameID: message.header.frame_id,
+                tfClient: that.tfClient,
+                object: newMarker
+              });
+              if (that.isShown) {
+                that.viewer.scene.add(that._markers[message.ns + '_' + message.id]);
+              }
+            }
+          }
+          else if(message.action === 1) { // "DEPRECATED"
+            console.warn('Received marker message with deprecated action identifier "1"');
+          }
+          else if(message.action === 2) { // "DELETE"
+            that._markers[message.ns + '_' + message.id].unsubscribeTf();
+            that.viewer.scene.remove(that._markers[message.ns + '_' + message.id]);
+            delete that._markers[message.ns + '_' + message.id];
+          }
+          else if(message.action === 3) { // "DELETE ALL"
+            for (var m in that._markers){
+              that._markers[m].unsubscribeTf();
+              that.viewer.scene.remove(that._markers[m]);
+            }
+            that._markers = {};
+          }
+          else {
+            console.warn('Received marker message with unknown action identifier "'+message.action+'"');
+          }
+        });
+      },
+    });
+  </script>
+</dom-module>

@@ -1,0 +1,203 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../ros-websocket/ros-websocket.html">
+
+<!--
+An element for calling ROS services using roslibjs.
+
+Example:
+
+    <ros-websocket ros="{{ros}}"></ros-websocket>
+    <ros-service
+      auto
+      id="service"
+      on-fail="handleError"
+      on-response="handleResponse"
+      name="/add_two_ints"
+      ros="{{ros}}"
+      service-type="rospy_tutorials/AddTwoInts"
+    ></ros-service>
+
+## Calling the service
+If `auto` is set, then setting the request will invoke the service:
+    
+    this.$.service.request = {a: 1, b: 2};
+
+If `auto` is not set, then invoke the service with `call(request)`:
+
+    this.$.service.call({a: 1, b: 2});
+
+## Getting the response
+You can get the result (or error message) in two ways: declaratively or through events.
+
+### Declarative 
+You can bind `last-response` and `last-error` to variables representing the response for the most recent request:
+
+    <ros-websocket ros="{{ros}}"></ros-websocket>
+    <ros-service
+      auto
+      id="service"
+      last-error="{{error}}"
+      last-response="{{response}}"
+      name="/add_two_ints"
+      ros="{{ros}}"
+      service-type="rospy_tutorials/AddTwoInts"
+    ></ros-service>
+    <p>Answer: {{response.sum}}</p>
+    <p>Error: {{error}}</p>
+
+### Events
+The `response` event includes the service response, as a JavaScript object:
+
+    function handleResponse(evt) {
+      console.log(evt.detail.sum);
+    }
+
+The `error` event includes the error message as a string:
+
+    function handleError(evt) {
+      console.log("Error: " + evt.detail);
+    }
+
+@demo demo/index.html
+-->
+
+<dom-module id="ros-service">
+  <template>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'ros-service',
+
+      properties: {
+        /**
+         * If true, call the service automatically when the request changes.
+         */
+        auto: {
+          type: Boolean,
+          default: false,
+        },
+
+        /**
+         * The name of the service, e.g., /add_two_ints
+         *
+         * @type string
+         */
+        name: {
+          type: String,
+          observer: '_initService',
+        },
+
+        /**
+         * The service request, as a JavaScript object.
+         */
+        request: {
+          type: Object,
+          default: null,
+          observer: '_requestChanged',
+        },
+
+        /**
+         * The last response returned by the service.
+         * Resets to null when the request changes.
+         */
+        lastResponse: {
+          type: Object,
+          default: null,
+          notify: true,
+          readOnly: true,
+        },
+
+        /**
+         * The last error that was returned.
+         * Resets to null when the request changes.
+         */
+        lastError: {
+          type: String,
+          default: null,
+          notify: true,
+          readOnly: true,
+        },
+
+        /**
+         * The ros object from the <ros-ros> element.
+         */ 
+        ros: {
+          type: Object,
+          default: null,
+          observer: '_initService',
+        },
+
+        /**
+         * The type of the service, e.g., rospy_tutorials/AddTwoInts
+         */
+        serviceType: {
+          type: String,
+          observer: '_initService',
+        },
+
+        _service: {
+          type: Object,
+          default: null,
+        },
+      },
+
+      _requestChanged: function() {
+        this._setLastResponse(null);
+        this._setLastError(null);
+        if (this._service && this.request && this.auto) {
+          this.call(this.request);
+        }
+      },
+
+      _initService: function() {
+        if (this.ros && this.name && this.serviceType) {
+          var that = this;
+          this._service = new ROSLIB.Service({
+            ros: that.ros,
+            name: that.name,
+            serviceType: that.serviceType
+          });
+        }
+      },
+
+      /**
+       * Call the service with the given request. Also sets the element's request attribute.
+       *
+       * @param Object request The request object, as a JavaScript object.
+       */
+      call: function(request) {
+        if (this._service && request) {
+          var that = this;
+          var lastResponse = this.lastResponse;
+          var req = new ROSLIB.ServiceRequest(request);
+          this._service.callService(req, function(result) {
+            that._setLastResponse(result);
+            that.fire('response', result);
+          }, function(error) {
+            that.lastError = error;
+            that.fire('fail', error);
+          });
+        } else {
+          var error = 'ros-service was not initialized before calling.';
+          console.warn(error);
+          this.fire('fail', error);
+        }
+      }
+
+      /**
+       * Fired when the service call succeeds.
+       * The service response is given as a JavaScript object in the event detail.
+       *
+       * @event response
+       */
+
+      /**
+       * Fired when the service call fails.
+       * The error message is given as the event detail.
+       *
+       * @event fail
+       */
+    });
+  </script>
+</dom-module>

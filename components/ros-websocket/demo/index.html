@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>ros-websocket Demo</title>
+    <script src="../../webcomponentsjs/webcomponents-lite.min.js"></script>
+    <link rel="import" href="../ros-websocket.html">
+  </head>
+  <body unresolved>
+    <p>An example of <code>&lt;ros-websocket&gt;</code></p>
+    <p>Open the JavaScript console to see if a connection has been established to the websocket.
+
+    <div>
+      <input type="text" id="urlInput" value="ws://localhost:9090"></input>
+      <input id="connectButton" type="button" value="Connect"></input>
+    </div>
+    <ros-websocket></ros-websocket>
+
+    <script>
+      var seedElement = document.querySelector('ros-websocket');
+      seedElement.addEventListener('connection', function() {
+        console.log('Connected to the websocket server.');
+      });
+      seedElement.addEventListener('error', function(error) {
+        console.log('Error connecting to the websocket server:', error);
+      });
+      seedElement.addEventListener('close', function() {
+        console.log('Connection to websocket server closed.');
+      });
+
+      document.querySelector('#connectButton').addEventListener('click', function() {
+        seedElement.url = document.querySelector('#urlInput').value;
+        seedElement.connect();
+      });
+    </script>
+
+  </body>
+</html>
