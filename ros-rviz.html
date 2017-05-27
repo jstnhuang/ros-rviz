@@ -3,6 +3,7 @@
 <link rel="import" href="../iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../iron-icons/iron-icons.html">
 <link rel="import" href="../iron-resizable-behavior/iron-resizable-behavior.html">
+<link rel="import" href="../neon-animation/web-animations.html">
 <link rel="import" href="../paper-button/paper-button.html">
 <link rel="import" href="../paper-drawer-panel/paper-drawer-panel.html">
 <link rel="import" href="../paper-fab/paper-fab.html">
@@ -83,21 +84,24 @@ Example:
           cursor: pointer;
         };
       }
+      [hidden] {
+        display: none;
+      }
     </style>
     <div id="container" class="layout horizontal">
       <iron-collapse id="sidebar" opened="{{sidebarOpened}}" horizontal>
         <paper-header-panel mode="seamed" id="displays">
-          <paper-toolbar id="displayHeader">
+          <paper-toolbar slot="header" id="displayHeader">
             <paper-icon-button id="closeDisplays" icon="arrow-back"
-              on-tap="_toggleDisplayList"></paper-icon-button>
+              on-tap="_toggleDisplayList" slot="top"></paper-icon-button>
             <paper-tooltip position="right" animation-delay="0"
-              for="closeDisplays">Hide displays panel</paper-tooltip>
-            <span class="title">Displays</span>
+              for="closeDisplays" slot="top">Hide displays panel</paper-tooltip>
+            <span class="title" slot="top">Displays</span>
             <paper-tooltip position="bottom" animation-delay="0"
-              for="addButton">Add a display</paper-tooltip>
-            <paper-menu-button id="displayMenu">
-              <paper-fab icon="add" id="addButton" class="dropdown-trigger"></paper-fab>
-              <paper-listbox id="displayPaperMenu" class="dropdown-content"
+              for="addButton" slot="top">Add a display</paper-tooltip>
+            <paper-menu-button id="displayMenu" slot="top">
+              <paper-fab icon="add" id="addButton" slot="dropdown-trigger"></paper-fab>
+              <paper-listbox id="displayPaperMenu" slot="dropdown-content"
                   on-tap="_onDisplaySelected">
                 <paper-item on-tap="addDepthCloud">Depth cloud</paper-item>
                 <paper-item on-tap="addGrid">Grid</paper-item>
@@ -110,7 +114,7 @@ Example:
               </paper-listbox>
             </paper-menu-button>
           </paper-toolbar>
-          <div id="displayList" class="fit">
+          <div id="displayList">
             <ros-rviz-display
               id="options"
               global-options="{{globalOptions}}"
@@ -132,7 +136,6 @@ Example:
                 type="{{display.type}}"
               ></ros-rviz-display>
             </template>
-            <content></content>
           </div>
         </paper-header-panel>
       </iron-collapse>
