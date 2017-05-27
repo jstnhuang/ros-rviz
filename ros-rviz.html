@@ -8,8 +8,8 @@
 <link rel="import" href="../paper-fab/paper-fab.html">
 <link rel="import" href="../paper-header-panel/paper-header-panel.html">
 <link rel="import" href="../paper-item/paper-item.html">
+<link rel="import" href="../paper-listbox/paper-listbox.html">
 <link rel="import" href="../paper-menu-button/paper-menu-button.html">
-<link rel="import" href="../paper-menu/paper-menu.html">
 <link rel="import" href="../paper-styles/color.html">
 <link rel="import" href="../paper-styles/typography.html">
 <link rel="import" href="../paper-toolbar/paper-toolbar.html">
@@ -97,7 +97,7 @@ Example:
               for="addButton">Add a display</paper-tooltip>
             <paper-menu-button id="displayMenu">
               <paper-fab icon="add" id="addButton" class="dropdown-trigger"></paper-fab>
-              <paper-menu id="displayPaperMenu" class="dropdown-content"
+              <paper-listbox id="displayPaperMenu" class="dropdown-content"
                   on-tap="_onDisplaySelected">
                 <paper-item on-tap="addDepthCloud">Depth cloud</paper-item>
                 <paper-item on-tap="addGrid">Grid</paper-item>
@@ -107,7 +107,7 @@ Example:
                 <paper-item on-tap="addPointCloud">Point cloud</paper-item>
                 <paper-item on-tap="addPointCloud2">Point cloud 2</paper-item>
                 <paper-item on-tap="addUrdf">Robot model</paper-item>
-              </paper-menu>
+              </paper-listbox>
             </paper-menu-button>
           </paper-toolbar>
           <div id="displayList" class="fit">
@@ -238,25 +238,35 @@ Example:
       },
 
       attached: function() {
-        var width = this.$.viewer.offsetWidth;
-        var height = this.$.viewer.offsetHeight;
-        var background = this.globalOptions.background;
-        this._viewer = new ROS3D.Viewer({
-          background: background,
-          divID: 'viewer',
-          width: width,
-          height: height,
-          antialias: true
+        Polymer.RenderStatus.beforeNextRender(this, function() {
+          var width = this.$.viewer.offsetWidth;
+          var height = this.$.viewer.offsetHeight;
+          var background = this.globalOptions.background;
+          // Hack - Viewer appends to the divID using document.getElementById.
+          // This does not work in the context of Polymer, so we alias document
+          // to the shadow root temporarily.
+          var backupFunc = document.getElementById;
+          var that = this;
+          document.getElementById = function(id) {
+            return that.shadowRoot.getElementById(id);
+          }
+          this._viewer = new ROS3D.Viewer({
+            background: background,
+            divID: 'viewer',
+            width: width,
+            height: height,
+            antialias: true
+          });
+          document.getElementById = backupFunc;
         });
-        var that = this;
-        window.setTimeout(function() {
-          that.resize()
-        }, 100);
-        this.addEventListener('iron-resize', function() {
-          that.resize();
-        });
-        this.fire('viewerConstructed', {
-          viewer: this._viewer,
+        Polymer.RenderStatus.afterNextRender(this, function() {
+          var that = this;
+          window.setTimeout(function() {
+            that.resize()
+          }, 100);
+          this.addEventListener('iron-resize', function() {
+            that.resize();
+          });
         });
       },
 
