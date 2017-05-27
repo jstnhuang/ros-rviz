@@ -242,6 +242,9 @@ Example:
 
       attached: function() {
         Polymer.RenderStatus.beforeNextRender(this, function() {
+          if (this._attached) {
+            return;
+          }
           var width = this.$.viewer.offsetWidth;
           var height = this.$.viewer.offsetHeight;
           var background = this.globalOptions.background;
@@ -261,6 +264,7 @@ Example:
             antialias: true
           });
           document.getElementById = backupFunc;
+          this._attached = true;
         });
         Polymer.RenderStatus.afterNextRender(this, function() {
           var that = this;
