@@ -4,7 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>ros-rviz Demo</title>
-    <script src="../../webcomponentsjs/webcomponents-lite.min.js"></script>
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="../../polymer/lib/elements/dom-bind.html">
     <link rel="import" href="../../ros-websocket/ros-websocket.html">
     <link rel="import" href="../ros-rviz.html">
     <link rel="import" href="../ros-rviz-display.html">
@@ -19,18 +20,18 @@
     </style>
   </head>
   <body unresolved>
-    <template id="t" is="dom-bind">
-      <ros-websocket auto id="websocket" url="{{url}}" ros="{{ros}}"></ros-websocket>
-      <ros-rviz id="rviz" ros="{{ros}}" websocket-url="{{url}}">
-    </template>
+    <dom-bind id="t">
+      <template is="dom-bind">
+        <ros-websocket auto id="websocket" url="{{url}}" ros="{{ros}}"></ros-websocket>
+        <ros-rviz id="rviz" ros="{{ros}}" websocket-url="{{url}}">
+      </template>
+    </dom-bind>
   </body>
   <script>
     var t = document.querySelector('#t');
-    t.addEventListener('dom-change', function() {
-      var websocket = t.$.websocket;
-      websocket.addEventListener('connection', function() {
-        console.log('Connected to the websocket server.');
-      });
+    var websocket = t.$.websocket;
+    websocket.addEventListener('connection', function() {
+      console.log('Connected to the websocket server.');
     });
   </script>
 </html>
