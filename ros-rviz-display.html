@@ -45,19 +45,18 @@
       #deleteButton:hover {
         color: var(--paper-red-500);
       }
+      [hidden] {
+        display: none;
+      }
     </style>
     <div class="layout horizontal" id="header" on-tap="_toggleCollapse">
-      <template is="dom-if" if="{{!permanent}}">
-        <paper-checkbox checked="{{isShown}}" on-tap="_handleCheckbox">
+        <paper-checkbox checked="{{isShown}}" hidden$="[[permanent]]" on-tap="_handleCheckbox">
           <h1>{{name}}</h1>
         </paper-checkbox>
-      </template>
-      <template is="dom-if" if="{{permanent}}">
-        <h1>{{name}}</h1>
-      </template>
+        <h1 hidden$="[[!permanent]]">{{name}}</h1>
       <div class="flex"></div>
       <paper-icon-button id="deleteButton" icon="cancel" on-tap="destroy"
-        hidden$="{{permanent}}"></paper-icon-button>
+        hidden$="[[permanent]]"></paper-icon-button>
     </div>
     <iron-collapse id="collapse">
       <template is="dom-if" if="{{_typeIs('globalOptions', type)}}">
