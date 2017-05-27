@@ -18,7 +18,7 @@
         },
         topic: {
           type: String,
-          value: '/head_mount_kinect/depth_registered/points',
+          value: '',
           notify: true, 
         },
         size: {
@@ -74,9 +74,7 @@
         if (!(this.ros && this.tfClient && this.topic)) {
           return;
         }
-        if (this._pc2) {
-          delete this._pc2;
-        }
+        this.destroy();
         var that = this;
         this._pc2 = new ROS3D.PointCloud2({
           ros: this.ros,
