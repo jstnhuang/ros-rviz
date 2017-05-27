@@ -59,6 +59,7 @@
 
       show: function() {
         if (this.viewer) {
+          this.viewer.scene.remove(this._grid);
           this.viewer.addObject(this._grid);
         }
       },
@@ -70,6 +71,7 @@
       },
 
       _updateGrid: function() {
+        this.viewer.scene.remove(this._grid);
         this._grid = new ROS3D.Grid({
           cellSize: this.cellSize,
           color: this.color,
