@@ -11,7 +11,7 @@
     "ros"
   ],
   "main": "ros-rviz.html",
-  "license": "https://opensource.org/licenses/MIT",
+  "license": "https://opensource.org/licenses/BSD-3-Clause",
   "homepage": "https://github.com/jstnhuang/ros-rviz/",
   "ignore": [
     "/.*",
