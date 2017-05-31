@@ -8,19 +8,60 @@
     <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
     <script src="../../web-component-tester/browser.js"></script>
 
+    <link rel="import" href="../../ros-websocket/ros-websocket.html">
     <link rel="import" href="../ros-rviz.html">
+    <style>
+      .test {
+        height: 500px;
+      }
+    </style>
   </head>
   <body>
-    <test-fixture id="basic">
+    <test-fixture id="instantiation">
       <template>
         <ros-rviz></ros-rviz>
       </template>
     </test-fixture>
+    <ros-websocket id="websocket" auto ros="{{ros}}"></ros-websocket>
+    <div class="test">
+      <h1>Configuration test</h1>
+      <ros-rviz id="rviz1" ros="[[ros]]"></ros-rviz>
+    </div>
     <script>
       suite('ros-rviz', function() {
         test('instantiating the element works', function() {
-          var element = fixture('basic');
+          var element = fixture('instantiation');
           assert.equal(element.is, 'ros-rviz');
+        });
+
+        test('element loads config', function(done) {
+          var rviz = document.getElementById('rviz1');
+          assert.isTrue(websocket.isConnected, 'websocket is connected');
+          assert.isOk(rviz);
+
+          var config = {
+            globalOptions: {
+              fixedFrame: '/base_link',                                                                                              
+            },
+            displays: [
+              {
+                isShown: true,
+                name: 'Grid',
+                type: 'grid',
+                options: {
+                  cellSize: 1,
+                  color: '#cccccc',
+                  numCells: 20,
+                },
+              },
+            ],
+            sidebarOpened: false,
+          };
+          rviz.loadConfig(config);
+          flush(function() {
+            assert.equal(6, rviz._viewer.scene.children.length);
+            done();
+          });
         });
       });
     </script>
