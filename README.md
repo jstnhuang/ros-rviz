@@ -1,4 +1,5 @@
 # \<ros-rviz\>
+[![Build Status](https://travis-ci.org/jstnhuang/ros-rviz.svg?branch=master)](https://travis-ci.org/jstnhuang/ros-rviz)
 [![Published on webcomponents.org](https://img.shields.io/badge/webcomponents.org-published-blue.svg)](https://www.webcomponents.org/element/jstnhuang/ros-rviz)
 
 A Polymer element for ROS visualization.
