@@ -39,7 +39,7 @@
       },
 
       observers: [
-        '_optionsChanged(cellSize, color, numCells)',
+        '_optionsChanged(viewer, cellSize, color, numCells)',
       ],
 
       ready: function() {
@@ -61,17 +61,21 @@
         if (this.viewer) {
           this.viewer.scene.remove(this._grid);
           this.viewer.addObject(this._grid);
+        } else {
+          console.error('Failed to add grid to viewer!');
         }
       },
 
-      _optionsChanged: function(cellSize, color, numCells) {
+      _optionsChanged: function(viewer, cellSize, color, numCells) {
         this.hide();
         this._updateGrid();
         this.show();
       },
 
       _updateGrid: function() {
-        this.viewer.scene.remove(this._grid);
+        if (this.viewer) {
+          this.viewer.scene.remove(this._grid);
+        }
         this._grid = new ROS3D.Grid({
           cellSize: this.cellSize,
           color: this.color,
