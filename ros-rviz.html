@@ -388,7 +388,7 @@ Example:
           display.hide();
           display.destroy();
         }
-        this.splice('displays', 0);
+        this.splice('displays', 0, this.displays.length);
         if (config.displays) {
           for (var i=0; i<config.displays.length; ++i) {
             var displayConfig = config.displays[i];
