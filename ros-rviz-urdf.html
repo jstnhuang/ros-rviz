@@ -21,6 +21,7 @@
           value: 'robot_description'
         },
         globalOptions: Object,
+        isShown: Boolean,
         ros: Object,
         tfClient: Object,
         tfPrefix: {
@@ -54,7 +55,7 @@
       },
 
       show: function() {
-        if (this.viewer) {
+        if (this.viewer && this.isShown) {
           this.viewer.addObject(this._urdf);
         }
       },

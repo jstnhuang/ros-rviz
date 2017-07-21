@@ -151,6 +151,7 @@
     </iron-collapse>
   </template>
   <script>
+
     Polymer({
       is: 'ros-rviz-display',
 
@@ -160,7 +161,6 @@
         index: Number,
         isShown: {
           type: Boolean,
-          value: true,
           observer: '_onIsShownChanged',
         },
         globalOptions: Object,
@@ -217,11 +217,11 @@
         evt.stopPropagation();
       },
 
-      _onIsShownChanged: function() {
+      _onIsShownChanged: function(isShown) {
         var display = this.$$('#display');
-        if (this.isShown && display) {
+        if (isShown && display) {
           display.show();
-        } else if (!this.isShown && display) {
+        } else if (!isShown && display) {
           display.hide();
         }
       },
