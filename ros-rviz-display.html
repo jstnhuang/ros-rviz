@@ -207,10 +207,12 @@
 
       // Currently only used by global options display.
       loadConfig: function(config) {
-        var display = this.$$('#display');
-        if (display && display.loadConfig) {
-          display.loadConfig(config);
-        }
+        Polymer.RenderStatus.afterNextRender(this, function() {
+          var display = this.$$('#display');
+          if (display && display.loadConfig) {
+            display.loadConfig(config);
+          }
+        });
       },
 
       _handleCheckbox: function(evt) {

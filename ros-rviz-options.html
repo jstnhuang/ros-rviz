@@ -128,15 +128,13 @@
 
       _updateGlobalOptions: function() {
         var that = this;
-        this.debounce('updateGlobalOptions', function() {
-          that.set('globalOptions.background', that.background);
-          that.set('globalOptions.clientId', that.clientId);
-          that.set('globalOptions.colladaLoader', that.colladaLoader);
-          that.set('globalOptions.colladaServer', that.colladaServer);
-          that.set('globalOptions.fixedFrame', that.fixedFrame);
-          that.set('globalOptions.url', that.url);
-          that.set('globalOptions.videoServer', that.videoServer);
-        }, 500);
+        that.set('globalOptions.background', that.background);
+        that.set('globalOptions.clientId', that.clientId);
+        that.set('globalOptions.colladaLoader', that.colladaLoader);
+        that.set('globalOptions.colladaServer', that.colladaServer);
+        that.set('globalOptions.fixedFrame', that.fixedFrame);
+        that.set('globalOptions.url', that.url);
+        that.set('globalOptions.videoServer', that.videoServer);
       },
     });
   </script>
