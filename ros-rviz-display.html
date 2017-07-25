@@ -11,6 +11,7 @@
 <link rel="import" href="ros-rviz-interactive-markers.html">
 <link rel="import" href="ros-rviz-marker-array.html">
 <link rel="import" href="ros-rviz-markers.html">
+<link rel="import" href="ros-rviz-occupancy-grid.html">
 <link rel="import" href="ros-rviz-options.html">
 <link rel="import" href="ros-rviz-point-cloud-2.html">
 <link rel="import" href="ros-rviz-point-cloud.html">
@@ -115,6 +116,17 @@
           topic="{{options.topic}}"
           viewer="{{viewer}}"
         ></ros-rviz-marker-array>
+      </template>
+      <template is="dom-if" if="{{_typeIs('occupancyGrid', type)}}">
+        <ros-rviz-occupancy-grid id="display"
+          continuous="{{options.continuous}}"
+          global-options="[[globalOptions]]"
+          is-shown="[[isShown]]"
+          opacity="{{options.opacity}}"
+          ros="[[ros]]"
+          topic="{{options.topic}}"
+          viewer="{{viewer}}"
+        ></ros-rviz-occupancy-grid>
       </template>
       <template is="dom-if" if="{{_typeIs('pointCloud', type)}}">
         <ros-rviz-point-cloud id="display"

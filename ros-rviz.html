@@ -107,6 +107,7 @@ Example:
                 <paper-item on-tap="addInteractiveMarkers">Interactive markers</paper-item>
                 <paper-item on-tap="addMarkers">Markers</paper-item>
                 <paper-item on-tap="addMarkerArray">Marker array</paper-item>
+                <paper-item on-tap="addOccupancyGrid">Occupancy grid</paper-item>
                 <paper-item on-tap="addPointCloud">Point cloud</paper-item>
                 <paper-item on-tap="addPointCloud2">Point cloud 2</paper-item>
                 <paper-item on-tap="addUrdf">Robot model</paper-item>
@@ -323,6 +324,24 @@ Example:
             topic: '/visualization_marker_array',
           },
           type: 'markerArray',
+        });
+      },
+
+      addOccupancyGrid: function() {
+        this.push('displays', {
+          isShown: true,
+          name: 'Map',
+          options: {
+            color: {
+              r: 255,
+              g: 255,
+              b: 255
+            },
+            continuous: false,
+            opacity: 1.0,
+            topic: '/map',
+          },
+          type: 'occupancyGrid',
         });
       },
 

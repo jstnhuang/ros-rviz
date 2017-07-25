@@ -1,0 +1,106 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="imports.html">
+
+<dom-module id="ros-rviz-occupancy-grid">
+  <template>
+    <paper-input label="Map topic" value="{{topic}}"></paper-input>
+    <paper-input label="Opacity" value="{{opacity}}"></paper-input>
+    <paper-checkbox checked="{{continuous}}">Continuously update</paper-input>
+  </template>
+  <script>
+    Polymer({
+      is: 'ros-rviz-occupancy-grid',
+
+      properties: {
+        name: {
+          type: String,
+          value: 'Map',
+        },
+        topic: {
+          type: String,
+          value: '/map'
+        },
+        color: {
+          type: Object,
+          value: function() {
+            return { r: 255, g: 255, b: 255 };
+          }
+        },
+        continuous: {
+          type: Boolean,
+          value: false,
+        },
+        opacity: {
+          type: Number,
+          value: 1.0,
+        },
+        globalOptions: Object,
+        isShown: Boolean,
+        ros: Object,
+        viewer: Object,
+      },
+
+      observers: [
+        '_optionsChanged(topic, continuous, opacity, color.*)',
+      ],
+
+      //ready: function() {
+      //  var that = this;
+      //  this._updateDisplay(function() {
+      //    that.show();
+      //  });
+      //},
+
+      destroy: function() {
+        // Nothing to destroy.
+      },
+
+      hide: function() {
+        if (this._gridClient) {
+          this._gridClient.unsubscribe();
+          this._gridClient = null;
+        }
+        if (this.viewer && this._gridClient) {
+          this.viewer.scene.remove(this._gridClient.currentGrid);
+        }
+      },
+
+      show: function() {
+        if (this.viewer && this.isShown) {
+          if (!this._gridClient) {
+            this._updateDisplay();
+          }
+          this.viewer.scene.add(this._gridClient.currentGrid);
+        }
+      },
+
+      _optionsChanged: function(topic, continuous, opacity, color) {
+        this.hide();
+        this._updateDisplay();
+        this.show();
+      },
+
+      _updateDisplay: function(callback) {
+        if (!(this.ros && this.viewer && this.topic &&
+             (this.continuous || this.continuous === false) &&
+             (this.opacity || this.opacity === 0.0))) {
+          return;
+        }
+        if (this._gridClient) {
+          this._gridClient.unsubscribe();
+        }
+        this._gridClient = new ROS3D.OccupancyGridClient({
+          ros: this.ros,
+          topic: this.topic,
+          continuous: this.continuous,
+          rootObject: this.viewer.scene,
+          offsetPose: null, // Maybe implement in the future
+          color: this.color,
+          opacity: this.opacity
+        });
+      },
+    });
+  </script>
+</dom-module>
