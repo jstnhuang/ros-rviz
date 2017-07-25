@@ -6,8 +6,8 @@
 <dom-module id="ros-rviz-occupancy-grid">
   <template>
     <paper-input label="Map topic" value="{{topic}}"></paper-input>
+    <paper-checkbox checked="{{continuous}}">Continuously update</paper-checkbox>
     <paper-input label="Opacity" value="{{opacity}}"></paper-input>
-    <paper-checkbox checked="{{continuous}}">Continuously update</paper-input>
   </template>
   <script>
     Polymer({
@@ -22,15 +22,9 @@
           type: String,
           value: '/map'
         },
-        color: {
-          type: Object,
-          value: function() {
-            return { r: 255, g: 255, b: 255 };
-          }
-        },
         continuous: {
           type: Boolean,
-          value: false,
+          value: true,
         },
         opacity: {
           type: Number,
@@ -39,31 +33,25 @@
         globalOptions: Object,
         isShown: Boolean,
         ros: Object,
+        tfClient: Object,
         viewer: Object,
       },
 
       observers: [
-        '_optionsChanged(topic, continuous, opacity, color.*)',
+        '_optionsChanged(topic, continuous, opacity)',
       ],
-
-      //ready: function() {
-      //  var that = this;
-      //  this._updateDisplay(function() {
-      //    that.show();
-      //  });
-      //},
 
       destroy: function() {
         // Nothing to destroy.
       },
 
       hide: function() {
+        if (this.viewer && this._gridClient) {
+          this.viewer.scene.remove(this._gridClient.currentGrid);
+        }
         if (this._gridClient) {
           this._gridClient.unsubscribe();
           this._gridClient = null;
-        }
-        if (this.viewer && this._gridClient) {
-          this.viewer.scene.remove(this._gridClient.currentGrid);
         }
       },
 
@@ -72,11 +60,10 @@
           if (!this._gridClient) {
             this._updateDisplay();
           }
-          this.viewer.scene.add(this._gridClient.currentGrid);
         }
       },
 
-      _optionsChanged: function(topic, continuous, opacity, color) {
+      _optionsChanged: function(topic, continuous, opacity) {
         this.hide();
         this._updateDisplay();
         this.show();
@@ -97,7 +84,7 @@
           continuous: this.continuous,
           rootObject: this.viewer.scene,
           offsetPose: null, // Maybe implement in the future
-          color: this.color,
+          color: {r: 255, g: 255, b: 255},
           opacity: this.opacity
         });
       },
