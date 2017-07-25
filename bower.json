@@ -37,6 +37,7 @@
     "paper-styles": "PolymerElements/paper-styles#^2.0.0",
     "paper-toolbar": "PolymerElements/paper-toolbar#^2.0.0",
     "paper-tooltip": "PolymerElements/paper-tooltip#^2.0.0",
+    "ros3djs": "RobotWebTools/ros3djs#c36fbdbfb310871b3bb98b6ad014dee20416f7dc",
     "ros-service": "jstnhuang/ros-service#^2.0.0",
     "ros-websocket": "jstnhuang/ros-websocket#^3.0.0"
   },
