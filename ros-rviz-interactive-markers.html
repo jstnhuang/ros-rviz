@@ -29,6 +29,10 @@
         },
       },
 
+      observers: [
+        '_optionsChanged(viewer, topic)',
+      ],
+
       ready: function() {
         this._updateDisplay();
         this.show();
@@ -50,7 +54,17 @@
         }
       },
 
+      _optionsChanged: function(viewer, topic) {
+        this.hide();
+        this._updateDisplay();
+        this.show();
+      },
+
       _updateDisplay: function() {
+        if (!this.viewer || !this.topic) {
+          return;
+        }
+
         var that = this;
         if (this._client) {
           this._client.unsubscribe();
