@@ -176,7 +176,10 @@
           type: Boolean,
           observer: '_onIsShownChanged',
         },
-        globalOptions: Object,
+        globalOptions: {
+          type: Object,
+          notify: true,
+        },
         /**
          * Options for this type of display.
          * It is left up to the display type to interpret the options.
