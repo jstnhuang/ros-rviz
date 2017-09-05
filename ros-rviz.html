@@ -364,25 +364,6 @@ Example:
         });
       },
 
-      loadConfig: function(config) {
-        if (config.globalOptions) {
-          this.$.options.loadConfig(config.globalOptions);
-        }
-        var domDisplays = this.$.displayList.querySelectorAll('ros-rviz-display'); 
-        for (var d=0; d<domDisplays.length; ++d) {
-          var display = domDisplays[d];
-          display.hide();
-          display.destroy();
-        }
-        this.splice('displays', 0, this.displays.length);
-        if (config.displays) {
-          for (var i=0; i<config.displays.length; ++i) {
-            var displayConfig = config.displays[i];
-            this.push('displays', displayConfig);
-          }
-        }
-      },
-
       resize: function() {
         if (this._viewer) {
           var width = this.$.viewer.offsetWidth;

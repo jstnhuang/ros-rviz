@@ -12,13 +12,13 @@
         @apply(--paper-font-common-base);
       }
     </style>
-    <paper-input label="Fixed frame" value="{{fixedFrame}}" on-blur="_updateGlobalOptions"></paper-input>
-    <paper-input label="Background color" value="{{background}}" on-blur="_updateGlobalOptions"></paper-input>
-    <paper-input label="Websocket URL" value="{{url}}" on-blur="_updateGlobalOptions"></paper-input>
-    <paper-input label="Web video server URL" value="{{videoServer}}" on-blur="_updateGlobalOptions"></paper-input>
-    <paper-input label="Collada file server URL" value="{{colladaServer}}" on-blur="_updateGlobalOptions"></paper-input>
+    <paper-input id="fixedFrame" label="Fixed frame" value="[[globalOptions.fixedFrame]]" on-blur="_updateGlobalOptions"></paper-input>
+    <paper-input id="bgColor" label="Background color" value="[[globalOptions.background]]" on-blur="_updateGlobalOptions"></paper-input>
+    <paper-input id="websocketUrl" label="Websocket URL" value="[[globalOptions.url]]" on-blur="_updateGlobalOptions"></paper-input>
+    <paper-input id="webVideoUrl" label="Web video server URL" value="[[globalOptions.videoServer]]" on-blur="_updateGlobalOptions"></paper-input>
+    <paper-input id="colladaUrl" label="Collada file server URL" value="[[globalOptions.colladaServer]]" on-blur="_updateGlobalOptions"></paper-input>
     <label id="colladaLabel">Collada loader:</label>
-    <paper-radio-group selected="{{colladaLoader}}" aria-labelledby="colladaLabel">
+    <paper-radio-group selected="{{globalOptions.colladaLoader}}" aria-labelledby="colladaLabel">
       <paper-radio-button name="collada">Loader 1</paper-radio-button>
       <paper-radio-button name="collada2">Loader 2</paper-radio-button>
     </paper-radio-group>
@@ -28,68 +28,52 @@
       is: 'ros-rviz-options',
 
       properties: {
-        background: {
-          type: String,
-          value: '#111111',
-        },
-        clientId: {
-          type: String,
-          value: function() {
-            return '' + Math.random();
-          }
-        },
-        colladaLoader: {
-          observer: '_updateGlobalOptions',
-          type: String,
-          value: 'collada2',
-        },
-        colladaServer: {
-          type: String,
-          value: function() {
-            var hostname = window.location.hostname;
-            return 'http://' + hostname + ':8001/';
-          },
-        },
-        fixedFrame: {
-          type: String,
-          value: '/base_link',
-        },
         globalOptions: {
           type: Object,
           notify: true,
-          //value: function() {
-          //  return {};
-          //},
         },
         name: {
           type: String,
           value: 'Options',
         },
-
-        // We have our own copies of the global properties so we have control over
-        // when they are updated to the outside world.
-        url: {
-          type: String,
-          value: function() {
-            var hostname = window.location.hostname;
-            var protocol = 'ws:';
-            if (window.location.protocol === 'https:') {
-              protocol = 'wss:';
-            }
-            return protocol + '//' + hostname + ':9090';
-          },
-        },
-        videoServer: {
-          type: String,
-          value: function() {
-            var hostname = window.location.hostname;
-            return 'http://' + hostname + ':9999';
-          },
-        },
       },
 
       ready: function() {
-        this._updateGlobalOptions();
+        if (!this.globalOptions.background) {
+          this.set('globalOptions.background', '#111111');
+        }
+        if (!this.globalOptions.clientId) {
+          // TODO: this is used by point cloud and depth cloud for dynamically starting backend streaming.
+          // We want to get rid of those and let the user handle that.
+          this.set('globalOptions.clientId', '' + Math.random());
+        }
+        if (!this.globalOptions.colladaLoader) {
+          this.set('globalOptions.colladaLoader', 'collada2');
+        }
+        if (!this.globalOptions.colladaServer) {
+          var protocol = window.location.protocol;
+          var hostname = window.location.hostname;                  
+          var url = protocol + '//' + hostname + ':8001/';
+          this.set('globalOptions.colladaServer', url);
+        }
+        if (!this.globalOptions.fixedFrame) {
+          this.set('globalOptions.fixedFrame', '/base_link');
+        }
+        if (!this.globalOptions.websocketUrl) {
+          var hostname = window.location.hostname;
+          var protocol = 'ws:';
+          if (window.location.protocol === 'https:') {
+            protocol = 'wss:';
+          }
+          var url = protocol + '//' + hostname + ':9090';
+          this.set('globalOptions.url', url);
+        }
+        if (!this.globalOptions.videoServer) {
+          var protocol = window.location.protocol;
+          var hostname = window.location.hostname;
+          var url = protocol + '//' + hostname + ':9999';
+          this.set('globalOptions.videoServer', url);
+        }
       },
 
       destroy: function() {
@@ -100,41 +84,16 @@
         // Nothing to do.
       },
 
-      loadConfig: function(config) {
-        if (config.background) {
-          this.background = config.background;
-        }
-        if (config.colladaLoader === 'collada' || config.colladaLoader === 'collada2') {
-          this.colladaLoader = config.colladaLoader;
-        }
-        if (config.colladaServer) {
-          this.colladaServer = config.colladaServer;
-        }
-        if (config.fixedFrame) {
-          this.fixedFrame = config.fixedFrame;
-        }
-        if (config.url) {
-          this.url = config.url;
-        }
-        if (config.videoServer) {
-          this.videoServer == config.videoServer;
-        }
-        this._updateGlobalOptions();
-      },
-
       show: function() {
         // Nothing to do.
       },
 
       _updateGlobalOptions: function() {
-        var that = this;
-        that.set('globalOptions.background', that.background);
-        that.set('globalOptions.clientId', that.clientId);
-        that.set('globalOptions.colladaLoader', that.colladaLoader);
-        that.set('globalOptions.colladaServer', that.colladaServer);
-        that.set('globalOptions.fixedFrame', that.fixedFrame);
-        that.set('globalOptions.url', that.url);
-        that.set('globalOptions.videoServer', that.videoServer);
+        this.set('globalOptions.background', this.$.bgColor.value);
+        this.set('globalOptions.colladaServer', this.$.colladaUrl.value);
+        this.set('globalOptions.fixedFrame', this.$.fixedFrame.value);
+        this.set('globalOptions.url', this.$.websocketUrl.value);
+        this.set('globalOptions.videoServer', this.$.webVideoUrl.value);
       },
     });
   </script>
