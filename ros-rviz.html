@@ -23,9 +23,8 @@ A ROS visualization interface for the web.
 
 Example:
 
-    <ros-websocket url="{{websocketUrl}}" ros="{{ros}}"></ros-websocket>
-    <ros-rviz websocket-url="{{websocketUrl}}" ros="{{ros}}">
-    </ros-rviz>
+    <ros-websocket auto ros="{{ros}}"></ros-websocket>
+    <ros-rviz ros="{{ros}}"></ros-rviz>
 
 @demo demo/index.html
 -->
@@ -88,7 +87,7 @@ Example:
       }
     </style>
     <div id="container" class="layout horizontal">
-      <iron-collapse id="sidebar" opened="{{sidebarOpened}}" horizontal>
+      <iron-collapse id="sidebar" opened="{{config.sidebarOpened}}" horizontal>
         <paper-header-panel mode="seamed" id="displays">
           <paper-toolbar slot="header" id="displayHeader">
             <paper-icon-button id="closeDisplays" icon="arrow-back"
@@ -117,14 +116,14 @@ Example:
           <div id="displayList">
             <ros-rviz-display
               id="options"
-              global-options="{{globalOptions}}"
+              global-options="{{config.globalOptions}}"
               name="Global options"
               permanent
               type="globalOptions"
             ></ros-rviz-display>
-            <template is="dom-repeat" items="{{displays}}" as="display">
+            <template is="dom-repeat" items="{{config.displays}}" as="display">
               <ros-rviz-display
-                global-options="{{globalOptions}}"
+                global-options="{{config.globalOptions}}"
                 index="{{index}}"
                 is-shown="{{display.isShown}}"
                 on-delete-display="_deleteDisplay"
@@ -140,7 +139,7 @@ Example:
         </paper-header-panel>
       </iron-collapse>
       <paper-fab icon="menu" id="openDisplays"
-        hidden$="{{sidebarOpened}}" on-tap="_toggleDisplayList"></paper-fab>
+        hidden$="{{config.sidebarOpened}}" on-tap="_toggleDisplayList"></paper-fab>
       <paper-tooltip position="right" animation-delay="0"
         for="openDisplays">Open displays</paper-tooltip>
       <div id="viewer" class="flex">
@@ -153,78 +152,46 @@ Example:
       is: 'ros-rviz',
 
       properties: {
-        globalOptions: {
-          type: Object,
-          value: function() {
-            return {};
-          },
-          notify: true,
-        },
-
         /**
          * A JSON object that specifies the configuration of the visualization.
          * Example:
          * {
          *   globalOptions: { url: ...},
          *   displays: [
-         *     { name: "Grid", type: "grid",
-         *       options: { numCells: 20 ...}
+         *     { 
+         *        name: "Grid", // Display name
+         *        type: "grid",
+         *        options: { numCells: 20, ...}, // Specific to each display
+         *        isPermanent: false // Only true for global options
          *     }
-         *   ]
+         *   ],
+         *   sidebarOpened: true
          * }
          */
         config: {
-          computed: '_computeConfig(globalOptions, displays, sidebarOpened)',
           notify: true,
           type: Object,
-        },
-
-        /**
-         * JavaScript representation of the display list.
-         * The format of the array is:
-         * ```
-         * [
-         *   {
-         *     isPermanent: true,
-         *     type: 'globalOptions',
-         *     name: 'Global Options',
-         *     options: {
-         *      websocketUrl: 'ws://localhost:9090'
-         *     },
-         *   }, {
-         *     type: 'grid',
-         *   }
-         * ]
-         * ```
-         */
-        displays: {
-          type: Array,
           value: function() {
-            return [];
-          },
+            return {
+              globalOptions: {},
+              sidebarOpened: true,
+              displays: [],
+            };
+          }
         },
         ros: {
           type: Object,
           observer: '_rosChanged',
         },
-        sidebarOpened: {
-          type: Boolean,
-          value: true,
-        },
         tfClient: Object, // The ROSLIB.TFClient
-        websocketUrl: {
-          type: String,
-          notify: true,
-          computed: '_computeWebsocketUrl(globalOptions.url)',
-        },
         _viewer: Object, // The ROS3D viewer
       },
 
       behaviors: [Polymer.IronResizableBehavior],
 
       observers: [
-        '_fixedFrameChanged(globalOptions.fixedFrame)',
-        '_backgroundChanged(globalOptions.background)',
+        '_fixedFrameChanged(config.globalOptions.fixedFrame)',
+        '_backgroundChanged(config.globalOptions.background)',
       ],
 
       _backgroundChanged: function(background) {
@@ -247,7 +214,7 @@ Example:
           }
           var width = this.$.viewer.offsetWidth;
           var height = this.$.viewer.offsetHeight;
-          var background = this.globalOptions.background;
+          var background = this.config.globalOptions.background;
           // Hack - Viewer appends to the divID using document.getElementById.
           // This does not work in the context of Polymer, so we alias document
           // to the shadow root temporarily.
@@ -282,7 +249,7 @@ Example:
        * This can be done manually through the UI.
        */
       addGrid: function() {
-        this.push('displays', {
+        this.push('config.displays', {
           isShown: true,
           name: 'Grid',
           options: {
@@ -295,7 +262,7 @@ Example:
       },
 
       addInteractiveMarkers: function() {
-        this.push('displays', {
+        this.push('config.displays', {
           isShown: true,
           name: 'Interactive Markers',
           options: {
@@ -306,7 +273,7 @@ Example:
       },
 
       addMarkers: function() {
-        this.push('displays', {
+        this.push('config.displays', {
           isShown: true,
           name: 'Markers',
           options: {
@@ -317,7 +284,7 @@ Example:
       },
 
       addMarkerArray: function() {
-        this.push('displays', {
+        this.push('config.displays', {
           isShown: true,
           name: 'Marker array',
           options: {
@@ -328,7 +295,7 @@ Example:
       },
 
       addOccupancyGrid: function() {
-        this.push('displays', {
+        this.push('config.displays', {
           isShown: true,
           name: 'Map',
           options: {
@@ -346,7 +313,7 @@ Example:
       },
 
       addDepthCloud: function() {
-        this.push('displays', {
+        this.push('config.displays', {
           isShown: true,
           name: 'Depth cloud',
           options: {
@@ -359,7 +326,7 @@ Example:
       },
 
       addPointCloud: function() {
-        this.push('displays', {
+        this.push('config.displays', {
           isShown: true,
           name: 'Point cloud',
           options: {
@@ -370,7 +337,7 @@ Example:
       },
 
       addPointCloud2: function() {
-        this.push('displays', {
+        this.push('config.displays', {
           isShown: true,
           name: 'Point cloud 2',
           options: {
@@ -386,7 +353,7 @@ Example:
        * This can be done manually through the UI.
        */
       addUrdf: function() {
-        this.push('displays', {
+        this.push('config.displays', {
           isShown: true,
           name: 'Robot model',
           options: {
@@ -414,9 +381,6 @@ Example:
             this.push('displays', displayConfig);
           }
         }
-        if (typeof(config.sidebarOpened) === 'boolean') {
-          this.sidebarOpened = config.sidebarOpened;
-        }
       },
 
       resize: function() {
@@ -427,21 +391,9 @@ Example:
         }
       },
 
-      _computeConfig: function(globalOptions, displays, sidebarOpened) {
-        return {
-          globalOptions: globalOptions,
-          displays: displays,
-          sidebarOpened: sidebarOpened,
-        };  
-      },
-
-      _computeWebsocketUrl: function(url) {
-        return url;
-      },
-
       _deleteDisplay: function(evt) {
         var index = evt.detail.index;
-        this.splice('displays', index, 1);
+        this.splice('config.displays', index, 1);
       },
 
       _onDisplaySelected: function() {
@@ -452,7 +404,7 @@ Example:
         this.tfClient = new ROSLIB.TFClient({
           ros: this.ros,
           angularThres: 0.01,
-          fixedFrame: this.globalOptions.fixedFrame,
+          fixedFrame: this.config.globalOptions.fixedFrame,
           transThres: 0.01,
           rate: 10.0
         });

@@ -203,6 +203,12 @@
         this.isShown = true;
       },
 
+      detached: function() {
+        var display = this.$$('#display');
+        display.hide();
+        display.destroy();
+      },
+
       destroy: function() {
         if (!this.permanent) {
           var display = this.$$('#display');
