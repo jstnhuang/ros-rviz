@@ -38,7 +38,7 @@
       },
 
       observers: [
-        '_optionsChanged(viewer, topic, continuous, opacity)',
+        '_optionsChanged(viewer, topic, continuous, opacity, ros)',
       ],
 
       destroy: function() {
@@ -63,7 +63,7 @@
         }
       },
 
-      _optionsChanged: function(viewer, topic, continuous, opacity) {
+      _optionsChanged: function(viewer, topic, continuous, opacity, ros) {
         this.hide();
         this._updateDisplay();
         this.show();

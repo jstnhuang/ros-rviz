@@ -31,7 +31,7 @@
       },
 
       observers: [
-        '_optionsChanged(viewer, topic)',
+        '_optionsChanged(viewer, topic, ros)',
       ],
 
       ready: function() {
@@ -55,7 +55,7 @@
         }
       },
 
-      _optionsChanged: function(viewer, topic) {
+      _optionsChanged: function(viewer, topic, ros) {
         this.hide();
         this._updateDisplay();
         this.show();

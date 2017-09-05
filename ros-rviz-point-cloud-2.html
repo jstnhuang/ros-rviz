@@ -35,7 +35,7 @@
       },
 
       observers: [
-        '_optionsChanged(topic, size, viewer)',
+        '_optionsChanged(topic, size, viewer, ros)',
       ],
 
       destroy: function() {
@@ -60,7 +60,7 @@
         }
       },
 
-      _optionsChanged: function(topic, size, viewer) {
+      _optionsChanged: function(topic, size, viewer, ros) {
         var that = this;
         this.debounce('updateForOptions', function() {
           that.hide();

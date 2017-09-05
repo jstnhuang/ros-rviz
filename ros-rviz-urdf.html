@@ -33,7 +33,7 @@
       },
 
       observers: [
-        '_optionsChanged(param)',
+        '_optionsChanged(param, tfClient, ros, globalOptions.colladaLoader, globalOptions.colladaServer)',
         '_tfPrefixChanged(tfPrefix)',
       ],
 
@@ -60,7 +60,7 @@
         }
       },
 
-      _optionsChanged: function(param) {
+      _optionsChanged: function(param, tfClient, ros, colladaLoader, colladaServer) {
         var that = this;
         this.debounce('updateForOptions', function() {
           that.hide();
