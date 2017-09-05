@@ -23,6 +23,7 @@
           value: '#cccccc',
           notify: true,
         },
+        isShown: Boolean,
         name: {
           type: String,
           value: 'Grid',
@@ -58,7 +59,7 @@
       },
 
       show: function() {
-        if (this.viewer) {
+        if (this.viewer && this.isShown) {
           this.viewer.scene.remove(this._grid);
           this.viewer.addObject(this._grid);
         }

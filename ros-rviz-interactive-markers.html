@@ -12,6 +12,7 @@
 
       properties: {
         globalOptions: Object,
+        isShown: Boolean,
         name: {
           type: String,
           value: 'Interactive Markers',
@@ -49,7 +50,7 @@
       },
 
       show: function() {
-        if (this._client) {
+        if (this._client && this.isShown) {
           this._client.subscribe(this.topic);
         }
       },

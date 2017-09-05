@@ -43,6 +43,7 @@
           value: '/head_mount_kinect_rgb_optical_frame',
         },
         globalOptions: Object,
+        isShown: Boolean,
         name: {
           type: String,
           value: 'Depth cloud',
@@ -91,6 +92,9 @@
       },
 
       show: function() {
+        if (!this.isShown) {
+          return;
+        }
         if (this._cloud) {
           this._cloud.startStream();
         }

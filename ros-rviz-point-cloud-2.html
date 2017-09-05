@@ -27,6 +27,7 @@
           notify: true,
         },
         globalOptions: Object,
+        isShown: Boolean,
         ros: Object,
         tfClient: Object,
         viewer: Object,
@@ -54,7 +55,9 @@
       },
 
       show: function() {
-        this._updateDisplay();
+        if (this.isShown) {
+          this._updateDisplay();
+        }
       },
 
       _optionsChanged: function(topic, size, viewer) {
