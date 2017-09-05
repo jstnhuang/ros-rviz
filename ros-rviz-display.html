@@ -12,7 +12,7 @@
 <link rel="import" href="ros-rviz-marker-array.html">
 <link rel="import" href="ros-rviz-markers.html">
 <link rel="import" href="ros-rviz-occupancy-grid.html">
-<link rel="import" href="ros-rviz-options.html">
+<link rel="import" href="ros-rviz-global-options.html">
 <link rel="import" href="ros-rviz-point-cloud-2.html">
 <link rel="import" href="ros-rviz-point-cloud.html">
 <link rel="import" href="ros-rviz-urdf.html">
@@ -61,9 +61,9 @@
     </div>
     <iron-collapse id="collapse">
       <template is="dom-if" if="{{_typeIs('globalOptions', type)}}">
-        <ros-rviz-options id="display"
+        <ros-rviz-global-options id="display"
           global-options="{{globalOptions}}"
-        ></ros-rviz-options>
+        ></ros-rviz-global-options>
       </template>
       <template is="dom-if" if="{{_typeIs('grid', type)}}">
         <ros-rviz-grid id="display"
