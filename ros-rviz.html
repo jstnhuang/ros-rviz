@@ -5,6 +5,7 @@
 <link rel="import" href="../iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="../neon-animation/web-animations.html">
 <link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../paper-dialog/paper-dialog.html">
 <link rel="import" href="../paper-drawer-panel/paper-drawer-panel.html">
 <link rel="import" href="../paper-fab/paper-fab.html">
 <link rel="import" href="../paper-header-panel/paper-header-panel.html">
@@ -85,6 +86,16 @@ Example:
       [hidden] {
         display: none;
       }
+      paper-button {
+        @apply(--paper-font-button);
+      }
+      paper-dialog {
+        max-width: 900px;
+        width: 90%;
+        height: 90%;
+        padding: 0px 24px;
+        margin-top: 0;
+      }
     </style>
     <div id="container" class="layout horizontal">
       <iron-collapse id="sidebar" opened="{{config.sidebarOpened}}" horizontal>
@@ -113,6 +124,7 @@ Example:
               </paper-listbox>
             </paper-menu-button>
           </paper-toolbar>
+          <paper-button on-tap="_showConfig">Load config</paper-button>
           <div id="displayList">
             <ros-rviz-display
               id="options"
@@ -144,6 +156,13 @@ Example:
         for="openDisplays">Open displays</paper-tooltip>
       <div id="viewer" class="flex">
       </div>
+      <paper-dialog id="configDialog" modal class="layout vertical">
+        <textarea id="configText" class="flex"></textarea>
+        <div class="buttons">
+          <paper-button dialog-dismiss>Cancel</paper-button>
+          <paper-button dialog-confirm autofocus on-tap="_applyConfigText">Apply</paper-button>
+        </div>
+      </paper-dialg>
     </div>
   </template>
 
@@ -413,6 +432,17 @@ Example:
 
       _toggleDisplayList: function() {
         this.$.sidebar.toggle();
+      },
+
+      _showConfig: function() {
+        this.$.configText.value = JSON.stringify(this.config, null, 2);
+        this.$.configDialog.open();
+      },
+
+      _applyConfigText: function() {
+        var configText = this.$.configText.value;
+        var config = JSON.parse(configText);
+        this.config = config;
       },
     });
   </script>
