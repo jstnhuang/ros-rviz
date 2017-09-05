@@ -23,8 +23,8 @@ A ROS visualization interface for the web.
 
 Example:
 
-    <ros-websocket auto ros="{{ros}}"></ros-websocket>
-    <ros-rviz ros="{{ros}}"></ros-rviz>
+    <ros-websocket auto ros="{{ros}}" url="{{url}}"></ros-websocket>
+    <ros-rviz ros="{{ros}}" websocket-url="{{url}}"></ros-rviz>
 
 @demo demo/index.html
 -->
@@ -183,6 +183,11 @@ Example:
           type: Object,
           observer: '_rosChanged',
         },
+        websocketUrl: {
+          notify: true,
+          type: String,
+          observer: '_websocketUrlChanged'
+        },
         tfClient: Object, // The ROSLIB.TFClient
         _viewer: Object, // The ROS3D viewer
       },
@@ -192,7 +197,22 @@ Example:
       observers: [
         '_fixedFrameChanged(config.globalOptions.fixedFrame)',
         '_backgroundChanged(config.globalOptions.background)',
+        '_globalWebsocketUrlChanged(config.globalOptions.url)',
       ],
+
+      // The websocketUrl property is intended to be bound to the url property of a
+      // <ros-websocket> element. We mirror its value to config.globalOptions.url. If the user edits
+      // the websocket URL, the change eventually propagates to the websocketUrl property through
+      // the two-way binding we manually add here.
+
+      // If the property changes, mirror to config.
+      _websocketUrlChanged: function(url) {
+        this.set('config.globalOptions.url', url);
+      },
+      // If the config changes, mirror to property.
+      _globalWebsocketUrlChanged: function(url) {
+        this.websocketUrl = url;
+      },
 
       _backgroundChanged: function(background) {
         if (background && this._viewer) {
