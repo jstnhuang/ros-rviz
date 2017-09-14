@@ -65,7 +65,7 @@
           global-options="{{globalOptions}}"
         ></ros-rviz-global-options>
       </template>
-      <template is="dom-if" if="{{_typeIs('grid', type)}}">
+      <template is="dom-if" if="{{_typeIs('grid', type)}}" restamp="true">
         <ros-rviz-grid id="display"
           cell-size="{{options.cellSize}}"
           color="{{options.color}}"
@@ -75,7 +75,7 @@
           viewer="{{viewer}}"
         ></ros-rviz-grid>
       </template>
-      <template is="dom-if" if="{{_typeIs('depthCloud', type)}}">
+      <template is="dom-if" if="{{_typeIs('depthCloud', type)}}" restamp="true">
         <ros-rviz-depth-cloud id="display"
           color-topic="{{options.colorTopic}}"
           depth-topic="{{options.depthTopic}}"
@@ -87,7 +87,7 @@
           viewer="{{viewer}}"
         ></ros-rviz-depth-cloud>
       </template>
-      <template is="dom-if" if="{{_typeIs('interactiveMarkers', type)}}">
+      <template is="dom-if" if="{{_typeIs('interactiveMarkers', type)}}" restamp="true">
         <ros-rviz-interactive-markers id="display"
           global-options="{{globalOptions}}"
           is-shown="{{isShown}}"
@@ -97,7 +97,7 @@
           viewer="{{viewer}}"
         ></ros-rviz-interactive-markers>
       </template>
-      <template is="dom-if" if="{{_typeIs('markers', type)}}">
+      <template is="dom-if" if="{{_typeIs('markers', type)}}" restamp="true">
         <ros-rviz-markers id="display"
           global-options="{{globalOptions}}"
           is-shown="{{isShown}}"
@@ -107,7 +107,7 @@
           viewer="{{viewer}}"
         ></ros-rviz-markers>
       </template>
-      <template is="dom-if" if="{{_typeIs('markerArray', type)}}">
+      <template is="dom-if" if="{{_typeIs('markerArray', type)}}" restamp="true">
         <ros-rviz-marker-array id="display"
           global-options="{{globalOptions}}"
           is-shown="{{isShown}}"
@@ -117,7 +117,7 @@
           viewer="{{viewer}}"
         ></ros-rviz-marker-array>
       </template>
-      <template is="dom-if" if="{{_typeIs('occupancyGrid', type)}}">
+      <template is="dom-if" if="{{_typeIs('occupancyGrid', type)}}" restamp="true">
         <ros-rviz-occupancy-grid id="display"
           continuous="{{options.continuous}}"
           global-options="[[globalOptions]]"
@@ -129,7 +129,7 @@
           viewer="{{viewer}}"
         ></ros-rviz-occupancy-grid>
       </template>
-      <template is="dom-if" if="{{_typeIs('pointCloud', type)}}">
+      <template is="dom-if" if="{{_typeIs('pointCloud', type)}}" restamp="true">
         <ros-rviz-point-cloud id="display"
           global-options="{{globalOptions}}"
           is-shown="{{isShown}}"
@@ -139,7 +139,7 @@
           viewer="{{viewer}}"
         ></ros-rviz-point-cloud>
       </template>
-      <template is="dom-if" if="{{_typeIs('pointCloud2', type)}}">
+      <template is="dom-if" if="{{_typeIs('pointCloud2', type)}}" restamp="true">
         <ros-rviz-point-cloud-2 id="display"
           global-options="{{globalOptions}}"
           is-shown="{{isShown}}"
@@ -150,7 +150,7 @@
           viewer="{{viewer}}"
         ></ros-rviz-point-cloud-2>
       </template>
-      <template is="dom-if" if="{{_typeIs('urdf', type)}}">
+      <template is="dom-if" if="{{_typeIs('urdf', type)}}" restamp="true">
         <ros-rviz-urdf id="display"
           global-options="{{globalOptions}}"
           is-shown="{{isShown}}"
@@ -207,17 +207,17 @@
       },
 
       detached: function() {
-        var display = this.$$('#display');
-        display.hide();
-        display.destroy();
+        this.destroy();
       },
 
       destroy: function() {
         if (!this.permanent) {
           var display = this.$$('#display');
-          display.hide();
-          display.destroy();
-          this.fire('delete-display', {index: this.index});
+          if (display) {
+            display.hide();
+            display.destroy();
+            this.fire('delete-display', {index: this.index});
+          }
         }
       },
 

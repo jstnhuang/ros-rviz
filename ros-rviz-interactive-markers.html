@@ -38,6 +38,11 @@
         // Nothing to destroy.
       },
 
+      // TODO: all "destroys" should just be detaches
+      detached: function() {
+        this.hide();
+      },
+
       hide: function() {
         if (this._client) {
           this._client.unsubscribe();
