@@ -8,9 +8,6 @@
     <link rel="import" href="../../polymer/lib/elements/dom-bind.html">
     <link rel="import" href="../../ros-websocket/ros-websocket.html">
     <link rel="import" href="../ros-rviz.html">
-    <link rel="import" href="../ros-rviz-display.html">
-    <link rel="import" href="../ros-rviz-grid.html">
-    <link rel="import" href="../ros-rviz-urdf.html">
     <style>
       html, body {
         padding: 0;
@@ -23,7 +20,7 @@
     <dom-bind id="t">
       <template is="dom-bind">
         <ros-websocket auto id="websocket" url="{{url}}" ros="{{ros}}"></ros-websocket>
-        <ros-rviz id="rviz" ros="{{ros}}" websocket-url="{{url}}">
+        <ros-rviz id="rviz" ros="{{ros}}" websocket-url="{{url}}"></ros-rviz>
       </template>
     </dom-bind>
   </body>
