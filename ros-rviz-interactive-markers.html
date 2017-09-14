@@ -34,11 +34,6 @@
         '_optionsChanged(viewer, topic, ros)',
       ],
 
-      ready: function() {
-        this._updateDisplay();
-        this.show();
-      },
-
       destroy: function() {
         // Nothing to destroy.
       },
@@ -58,7 +53,6 @@
       _optionsChanged: function(viewer, topic, ros) {
         this.hide();
         this._updateDisplay();
-        this.show();
       },
 
       _updateDisplay: function() {
