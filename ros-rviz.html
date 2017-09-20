@@ -149,7 +149,7 @@ Example:
                 on-delete-display="_deleteDisplay"
                 viewer="{{_viewer}}"
                 ros="{{ros}}"
-                tf-client="{{tfClient}}"
+                tf-client="{{_tfClient}}"
                 name="{{display.name}}"
                 options="{{display.options}}"
                 type="{{display.type}}"
@@ -194,16 +194,24 @@ Example:
             };
           }
         },
+
+        /**
+         * A ROS connection object taken from the `ros` property of the `<ros-websocket>` element.
+         */
         ros: {
           type: Object,
           observer: '_rosChanged',
         },
+
+        /**
+         * The websocket URL to connect to. This mirrors `config.globalOptions.url`.
+         */
         websocketUrl: {
           notify: true,
           type: String,
           observer: '_websocketUrlChanged'
         },
-        tfClient: Object, // The ROSLIB.TFClient
+        _tfClient: Object, // The ROSLIB.TFClient
         _viewer: Object, // The ROS3D viewer
       },
 
@@ -236,9 +244,9 @@ Example:
       },
 
       _fixedFrameChanged: function(fixedFrame) {
-        if (this.tfClient) {
-          this.tfClient.fixedFrame = fixedFrame;
-          this.tfClient.updateGoal();
+        if (this._tfClient) {
+          this._tfClient.fixedFrame = fixedFrame;
+          this._tfClient.updateGoal();
         }
       },
 
@@ -279,10 +287,6 @@ Example:
         });
       },
 
-      /**
-       * Adds a grid display to the visualization.
-       * This can be done manually through the UI.
-       */
       addGrid: function() {
         this.push('config.displays', {
           isShown: true,
@@ -382,10 +386,6 @@ Example:
         });
       },
 
-      /**
-       * Adds a robot model to the visualization.
-       * This can be done manually through the UI.
-       */
       addUrdf: function() {
         this.push('config.displays', {
           isShown: true,
@@ -397,6 +397,9 @@ Example:
         });
       },
 
+      /*
+       * This method should be called to update the viewer whenever the element is resized.
+       */
       resize: function() {
         if (this._viewer) {
           var width = this.$.viewer.offsetWidth;
@@ -415,7 +418,7 @@ Example:
       },
 
       _rosChanged: function() {
-        this.tfClient = new ROSLIB.TFClient({
+        this._tfClient = new ROSLIB.TFClient({
           ros: this.ros,
           angularThres: 0.01,
           fixedFrame: this.config.globalOptions.fixedFrame,
