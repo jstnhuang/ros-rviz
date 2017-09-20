@@ -42,11 +42,6 @@
         if (!this.globalOptions.background) {
           this.set('globalOptions.background', '#111111');
         }
-        if (!this.globalOptions.clientId) {
-          // TODO: this is used by point cloud and depth cloud for dynamically starting backend streaming.
-          // We want to get rid of those and let the user handle that.
-          this.set('globalOptions.clientId', '' + Math.random());
-        }
         if (!this.globalOptions.colladaLoader) {
           this.set('globalOptions.colladaLoader', 'collada2');
         }
