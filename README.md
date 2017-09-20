@@ -4,7 +4,8 @@
 A Polymer element for ROS visualization.
 Version 1 is a hybrid element that supports Polymer 1 and Polymer 2.
 
-- [Documentation](https://www.webcomponents.org/element/jstnhuang/ros-rviz/elements/ros-rviz)
+- [API Documentation](https://www.webcomponents.org/element/jstnhuang/ros-rviz/elements/ros-rviz)
+- [User guide](https://github.com/jstnhuang/ros-rviz/wiki/User-guide)
 - [Demo](https://www.webcomponents.org/element/jstnhuang/ros-rviz/demo/demo/index.html).
   Note that the demo requires a secure websocket server, since it is served over HTTPS.
 
