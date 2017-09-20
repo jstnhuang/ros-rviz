@@ -8,39 +8,25 @@
 -->
 <dom-module id="ros-rviz-depth-cloud">
   <template>
-    <ros-service
-     id="startDepthService"
-     on-response="_onDepthStart"
-     name="/start_depth_cloud"
-     ros="{{ros}}"
-     service-type="rws_rviz/StartDepthCloud"
-    ></ros-service>
-    <ros-service
-     id="stopDepthService"
-     name="/stop_depth_cloud"
-     ros="{{ros}}"
-     service-type="rws_rviz/StopDepthCloud"
-    ></ros-service>
-    <paper-input label="Color image topic" value="{{colorTopic}}" on-blur="_onOptionsChanged"></paper-input>
-    <paper-input label="Depth image topic" value="{{depthTopic}}" on-blur="_onOptionsChanged"></paper-input>
-    <paper-input label="Camera frame ID" value="{{frameId}}" on-blur="_onOptionsChanged"></paper-input>
+    <paper-input always-float-label label="ros_web_video encoded depth image URL:" value="{{_topic}}" on-blur="_onOptionsChanged">
+      <div slot="prefix">[[globalOptions.videoServer]]/www/</div>
+    </paper-input>
+    <paper-input label="Camera frame ID" value="{{_frameId}}" on-blur="_onOptionsChanged"></paper-input>
   </template>
   <script>
     Polymer({
       is: 'ros-rviz-depth-cloud',
 
       properties: {
-        colorTopic: {
+        topic: {
           type: String,
-          value: '/head_mount_kinect/rgb/image_rect_color'
-        },
-        depthTopic: {
-          type: String,
-          value: '/head_mount_kinect/depth_registered/image_raw'
+          value: 'depthcloud_encoded',
+          notify: true,
         },
         frameId: {
           type: String,
-          value: '/head_mount_kinect_rgb_optical_frame',
+          value: '/camera_rgb_optical_frame',
+          notify: true,
         },
         globalOptions: Object,
         isShown: Boolean,
@@ -55,30 +41,67 @@
           type: Object,
           value: null
         },
-        _oldColorTopic: String,
-        _oldDepthTopic: String,
         _sceneNode: Object,
         _depthUrl: String,
         _depthUrlTopic: String, // Backend image topic to stream.
       },
 
-      ready: function() {
-        this._updateStream();
-        var that = this;
-        window.addEventListener('beforeunload', function(evt) {
-          that._endStream();
+      observers: [
+        '_optionsChanged(ros, tfClient, viewer, globalOptions.videoServer, topic, frameId)'
+      ],
+
+      // Used for event handlers
+      _onOptionsChanged: function() {
+        if (this.topic !== this._topic) {
+          this.topic = this._topic;
+        }
+        if (this.frameId !== this._frameId) {
+          this.frameId = this._frameId;
+        }
+      },
+
+      _optionsChanged: function(ros, tfClient, viewer, videoServer, topic, frameId) {
+        if (!ros || !tfClient || !viewer || !videoServer || !topic || !frameId) {
+          return;
+        }
+
+        if (this._topic !== topic) {
+          this._topic = topic;
+        }
+        if (this._frameId !== frameId) {
+          this._frameId = frameId;
+        }
+
+        this.destroy();
+        var url = videoServer + '/streams/' + topic + '.webm?enc=webm&bitrate=250000&framerate=15';
+        this._cloud = new ROS3D.DepthCloud({
+          url: url,
+          f: 525.0,
         });
-        this.show();
+        this._cloud.startStream();
+
+        this._sceneNode = new ROS3D.SceneNode({
+          frameID: frameId,
+          tfClient: tfClient,
+          object: this._cloud,
+        });
+
+        // TODO(jstn): I just tried this and it seemed to work.
+        // Get a real understanding of what's going wrong.
+        this._sceneNode.scale.x = 0.5;
+        this._sceneNode.scale.y = 0.5;
+        this._sceneNode.scale.z = 0.5;
+
+        viewer.scene.add(this._sceneNode);
       },
 
       destroy: function() {
-        if (this._cloud) {
-          this._cloud.stopStream(); 
-        }
-        this._endStream();
+        this.hide();
         if (this._sceneNode) {
-          this.viewer.scene.remove(this._sceneNode);
           delete this._sceneNode;
+        }
+        if (this._cloud) {
+          delete this._cloud;
         }
       },
 
@@ -100,74 +123,6 @@
         }
         if (this._sceneNode) {
           this.viewer.scene.add(this._sceneNode);
-        }
-      },
-
-      _updateDisplay: function() {
-        var that = this;
-        if (this._cloud) {
-          this._cloud.stopStream();
-        }
-        if (!this._depthUrl) {
-          return;
-        }
-        this._cloud = new ROS3D.DepthCloud({
-          url: this._depthUrl,
-          f: 525.0,
-        });
-        this._cloud.startStream();
-
-        this._sceneNode = new ROS3D.SceneNode({
-          frameID: this.frameId,
-          tfClient: this.tfClient,
-          object: this._cloud,
-        });
-
-        // TODO(jstn): I just tried this and it seemed to work.
-        // Get a real understanding of what's going wrong.
-        this._sceneNode.scale.x = 0.5;
-        this._sceneNode.scale.y = 0.5;
-        this._sceneNode.scale.z = 0.5;
-
-        this.viewer.scene.add(this._sceneNode);
-      },
-
-      _computeDepthUrl: function(_depthUrlTopic) {
-        var url = this.globalOptions.videoServer + '/streams' + _depthUrlTopic + '.webm?enc=webm&bitrate=250000&framerate=15';
-        return url;
-      },
-
-      _onDepthStart: function(evt) {
-        this._depthUrlTopic = evt.detail.topic;
-        this._depthUrl = this._computeDepthUrl(this._depthUrlTopic);
-        this._updateDisplay();
-      },
-
-      _onOptionsChanged: function() {
-        this._updateStream();
-      },
-
-      _updateStream: function() {
-        this._endStream(); 
-        if (!this.colorTopic || !this.depthTopic) {
-          return;
-        }
-        this._oldColorTopic = this.colorTopic;
-        this._oldDepthTopic = this.depthTopic;
-        this.$.startDepthService.call({
-          depth_topic: this.depthTopic,
-          rgb_topic: this.colorTopic,
-          client_id: this.globalOptions.clientId
-        });
-      },
-
-      _endStream: function() {
-        if (this._oldColorTopic && this._oldDepthTopic) {
-          this.$.stopDepthService.call({
-            depth_topic: this._oldDepthTopic,
-            rgb_topic: this._oldColorTopic,
-            client_id: this.globalOptions.clientId
-          });
         }
       },
     });

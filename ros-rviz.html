@@ -363,9 +363,8 @@ Example:
           isShown: true,
           name: 'Depth cloud',
           options: {
-            colorTopic: '/head_mount_kinect/rgb/image_rect_color',
-            depthTopic: '/head_mount_kinect/depth_registered/image_raw',
-            frameId: '/head_mount_kinect_rgb_optical_frame',
+            topic: 'depthcloud_encoded',
+            frameId: '/camera_rgb_optical_frame',
           },
           type: 'depthCloud',
         });
