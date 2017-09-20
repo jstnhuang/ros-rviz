@@ -62,7 +62,7 @@
       },
 
       _updateDisplay: function() {
-        if (!this.viewer || !this.topic) {
+        if (!this.viewer || !this.topic || !this.ros) {
           return;
         }
 
