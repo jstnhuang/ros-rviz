@@ -77,8 +77,7 @@
       </template>
       <template is="dom-if" if="{{_typeIs('depthCloud', type)}}" restamp="true">
         <ros-rviz-depth-cloud id="display"
-          color-topic="{{options.colorTopic}}"
-          depth-topic="{{options.depthTopic}}"
+          topic="{{options.topic}}"
           frame-id="{{options.frameId}}"
           global-options="{{globalOptions}}"
           is-shown="{{isShown}}"
