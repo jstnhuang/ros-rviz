@@ -2,7 +2,7 @@
 [![Published on webcomponents.org](https://img.shields.io/badge/webcomponents.org-published-blue.svg)](https://www.webcomponents.org/element/jstnhuang/ros-rviz)
 
 A Polymer element for ROS visualization.
-Version 1 is a hybrid element that supports Polymer 1 and Polymer 2.
+Versions 1+ are hybrid elements that support Polymer 1 and Polymer 2.
 
 - [API Documentation](https://www.webcomponents.org/element/jstnhuang/ros-rviz/elements/ros-rviz)
 - [User guide](https://github.com/jstnhuang/ros-rviz/wiki/User-guide)
