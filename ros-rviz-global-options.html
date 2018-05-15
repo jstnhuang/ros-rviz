@@ -54,7 +54,7 @@
         if (!this.globalOptions.fixedFrame) {
           this.set('globalOptions.fixedFrame', '/base_link');
         }
-        if (!this.globalOptions.websocketUrl) {
+        if (!this.globalOptions.url) {
           var hostname = window.location.hostname;
           var protocol = 'ws:';
           if (window.location.protocol === 'https:') {
