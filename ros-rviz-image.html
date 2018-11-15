@@ -1,0 +1,110 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-image/iron-image.html">
+<link rel="import" href="../paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="imports.html">
+
+<dom-module id="ros-rviz-image">
+  <template>
+    <paper-input label="Image topic" value="{{topic}}"></paper-input>
+    <paper-checkbox checked="{{continuous}}">Continuously update</paper-checkbox>
+    <paper-input label="Transport hints" value="{{transport_hints}}"></paper-input>
+    <iron-image id="xy_image" src="[[image_source]]" alt="iron-image" ></iron-image>
+  </template>
+  <script>
+    Polymer({
+      is: 'ros-rviz-image',
+
+      properties: {
+        name: {
+          type: String,
+          value: 'Image',
+        },
+        topic: {
+          type: String,
+          value: '/camera/image/compressed',
+          notify: true,
+        },
+        continuous: {
+          type: Boolean,
+          value: true,
+          notify: true,
+        },
+        image_source: {
+          type: String,
+          value: '',
+        },
+        transport_hints: {
+          type: String,
+          value: 'compressed',
+          notify: true,
+        },
+        globalOptions: Object,
+        isShown: Boolean,
+        ros: Object,
+        tfClient: Object,
+        viewer: Object,
+      },
+
+      observers: [
+        '_optionsChanged(viewer, topic, continuous, transport_hints, ros)',
+      ],
+
+      destroy: function() {
+        // Nothing to destroy.
+      },
+
+      hide: function() {
+        if (this._imageTopic) {
+          this._imageTopic.unsubscribe();
+          this._imageTopic = null;
+        }
+      },
+
+      show: function() {
+        if (this.viewer && this.isShown) {
+          if (!this._imageTopic) {
+            this._updateDisplay();
+          }
+        }
+      },
+
+      _optionsChanged: function(viewer, topic, continuous, transport_hints, ros) {
+        this.hide();
+        this._updateDisplay();
+        this.show();
+      },
+
+      _updateDisplay: function(callback) {
+        console.log('Image updating display')
+        var that = this;
+
+        if (!(this.ros && this.viewer && this.topic &&
+             (this.continuous || this.continuous === false) &&
+             (this.transport_hints))) {
+          return;
+        }
+        if (this._imageTopic) {
+          this._imageTopic.unsubscribe();
+        }
+
+        console.log('Creating image topic')
+        this._imageTopic = new ROSLIB.Topic({
+            ros : this.ros,
+            name : this.topic,
+            messageType : 'sensor_msgs/CompressedImage'
+        });
+
+        this._imageTopic.subscribe(function(message) {
+          console.log('Received message on image viewer');
+          var imagedata = "data:image/jpg;base64," + message.data;
+          that._setImageSource(imagedata);
+        });
+      },
+
+      _setImageSource: function(data) {
+        this.image_source = data
+      },
+    });
+  </script>
+</dom-module>

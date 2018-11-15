@@ -121,6 +121,7 @@ Example:
                     on-tap="_onDisplaySelected">
                   <paper-item on-tap="addDepthCloud">Depth cloud</paper-item>
                   <paper-item on-tap="addGrid">Grid</paper-item>
+                  <paper-item on-tap="addImage">Image</paper-item>
                   <paper-item on-tap="addInteractiveMarkers">Interactive markers</paper-item>
                   <paper-item on-tap="addMarkers">Markers</paper-item>
                   <paper-item on-tap="addMarkerArray">Marker array</paper-item>
@@ -297,6 +298,17 @@ Example:
             numCells: 10,
           },
           type: 'grid',
+        });
+      },
+
+      addImage: function() {
+        this.push('config.displays', {
+          isShown: true,
+          name: 'Image',
+          options: {
+            topic: '/camera/image/compressed',
+          },
+          type: 'image',
         });
       },
 
