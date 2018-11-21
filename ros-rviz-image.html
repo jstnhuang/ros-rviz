@@ -15,7 +15,7 @@
         <paper-item>CompressedDepth</paper-item>
       </paper-listbox>
     </paper-dropdown-menu>
-    <iron-image id="xy_image" src="[[image_source]]" alt="iron-image" ></iron-image>
+    <iron-image id="xy_image" src="[[image_source]]" alt="No image"/>
   </template>
   <script>
     const _transportHints = {
@@ -33,7 +33,7 @@
         },
         topic: {
           type: String,
-          value: '/camera/image/compressed',
+          value: '/camera/image',
           notify: true,
         },
         image_source: {
@@ -48,7 +48,6 @@
         globalOptions: Object,
         isShown: Boolean,
         ros: Object,
-        tfClient: Object,
         viewer: Object,
       },
 
@@ -87,7 +86,6 @@
       },
 
       _updateDisplay: function(callback) {
-        console.log('Image updating display')
         var that = this;
 
         if (!(this.ros && this.viewer && this.topic &&
@@ -105,9 +103,17 @@
         });
 
         this._imageTopic.subscribe(function(message) {
-          console.log('Received message on image viewer');
-          var imagedata = "data:image/jpg;base64," + message.data;
-          that._setImageSource(imagedata);
+          console.log('Received image');
+          if (!that.$.xy_image.loading) {
+            var image = new Image();
+            image.src = "data:image/jpg;base64," + message.data;
+            image.onload = function() {
+              console.log('loaded image');
+              that._setImageSource(image.src);
+            }
+          } else {
+            console.log('Image is still loading, skip')
+          }
         });
       },
 
