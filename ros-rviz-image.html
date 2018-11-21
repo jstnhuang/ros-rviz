@@ -1,17 +1,29 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../iron-image/iron-image.html">
 <link rel="import" href="../paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-listbox/paper-listbox.html">
 <link rel="import" href="imports.html">
 
 <dom-module id="ros-rviz-image">
   <template>
     <paper-input label="Image topic" value="{{topic}}"></paper-input>
     <paper-checkbox checked="{{continuous}}">Continuously update</paper-checkbox>
-    <paper-input label="Transport hints" value="{{transport_hints}}"></paper-input>
+    <paper-dropdown-menu id="transport_hints_list" label="Transport hints" on-iron-select="transportHintSelected">
+      <paper-listbox slot="dropdown-content" class="dropdown-content" selected="0">
+        <paper-item>Compressed</paper-item>
+        <paper-item>CompressedDepth</paper-item>
+      </paper-listbox>
+    </paper-dropdown-menu>
     <iron-image id="xy_image" src="[[image_source]]" alt="iron-image" ></iron-image>
   </template>
   <script>
+    const _transportHints = {
+      Compressed: {type: 'sensor_msgs/CompressedImage', topicSuffix: '/compressed'},
+      CompressedDepth: {type: 'sensor_msgs/CompressedImage', topicSuffix: '/compressedDepth'},
+    };
+
     Polymer({
       is: 'ros-rviz-image',
 
@@ -36,7 +48,7 @@
         },
         transport_hints: {
           type: String,
-          value: 'compressed',
+          value: 'Compressed',
           notify: true,
         },
         globalOptions: Object,
@@ -47,8 +59,13 @@
       },
 
       observers: [
-        '_optionsChanged(viewer, topic, continuous, transport_hints, ros)',
+        '_optionsChanged(viewer, topic, continuous, ros)',
       ],
+
+      transportHintSelected: function(e) {
+        this.transport_hints = this.$.transport_hints_list.selectedItemLabel;
+        this._optionsChanged();
+      },
 
       destroy: function() {
         // Nothing to destroy.
@@ -69,7 +86,7 @@
         }
       },
 
-      _optionsChanged: function(viewer, topic, continuous, transport_hints, ros) {
+      _optionsChanged: function(viewer, topic, continuous, ros) {
         this.hide();
         this._updateDisplay();
         this.show();
@@ -88,11 +105,10 @@
           this._imageTopic.unsubscribe();
         }
 
-        console.log('Creating image topic')
         this._imageTopic = new ROSLIB.Topic({
             ros : this.ros,
-            name : this.topic,
-            messageType : 'sensor_msgs/CompressedImage'
+            name : this.topic + _transportHints[this.transport_hints].topicSuffix,
+            messageType : _transportHints[this.transport_hints].type
         });
 
         this._imageTopic.subscribe(function(message) {
