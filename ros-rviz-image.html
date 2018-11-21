@@ -1,5 +1,4 @@
 <link rel="import" href="../polymer/polymer.html">
-<link rel="import" href="../iron-image/iron-image.html">
 <link rel="import" href="../paper-checkbox/paper-checkbox.html">
 <link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="../paper-input/paper-input.html">
@@ -9,13 +8,13 @@
 <dom-module id="ros-rviz-image">
   <template>
     <paper-input label="Image topic" value="{{topic}}"></paper-input>
-    <paper-dropdown-menu id="transport_hints_list" label="Transport hints" on-iron-select="transportHintSelected">
+    <paper-dropdown-menu id="transport_hints_dropdown" label="Transport hints" on-iron-select="transportHintSelected">
       <paper-listbox slot="dropdown-content" class="dropdown-content" selected="0">
         <paper-item>Compressed</paper-item>
         <paper-item>CompressedDepth</paper-item>
       </paper-listbox>
     </paper-dropdown-menu>
-    <iron-image id="xy_image" src="[[image_source]]" alt="No image"/>
+    <canvas id="xy_image" width="280px;" height="280px;"/>
   </template>
   <script>
     const _transportHints = {
@@ -36,10 +35,6 @@
           value: '/camera/image',
           notify: true,
         },
-        image_source: {
-          type: String,
-          value: '',
-        },
         transport_hints: {
           type: String,
           value: 'Compressed',
@@ -56,7 +51,7 @@
       ],
 
       transportHintSelected: function(e) {
-        this.transport_hints = this.$.transport_hints_list.selectedItemLabel;
+        this.transport_hints = this.$.transport_hints_dropdown.selectedItemLabel;
         this._optionsChanged();
       },
 
@@ -86,7 +81,9 @@
       },
 
       _updateDisplay: function(callback) {
-        var that = this;
+        const that = this;
+        const canvas = this.$.xy_image;
+        const context = canvas.getContext('2d');
 
         if (!(this.ros && this.viewer && this.topic &&
              (this.transport_hints))) {
@@ -102,23 +99,26 @@
             messageType : _transportHints[this.transport_hints].type
         });
 
-        this._imageTopic.subscribe(function(message) {
-          console.log('Received image');
-          if (!that.$.xy_image.loading) {
-            var image = new Image();
-            image.src = "data:image/jpg;base64," + message.data;
-            image.onload = function() {
-              console.log('loaded image');
-              that._setImageSource(image.src);
-            }
-          } else {
-            console.log('Image is still loading, skip')
-          }
-        });
-      },
+        let updatingImage = false;
 
-      _setImageSource: function(data) {
-        this.image_source = data
+        this._imageTopic.subscribe(function(message) {
+          if (updatingImage) {
+            return;   // Drop frame if previous one didn't load yet.
+          }
+          updatingImage = true;
+          let image = new Image();
+          image.src = "data:image/jpg;base64," + message.data;
+          image.onload = function() {
+            const hRatio = canvas.width / image.width;
+            const vRatio = canvas.height / image.height;
+            const ratio  = Math.min (hRatio, vRatio);
+            context.drawImage(image, 0, 0,
+                              image.width, image.height,
+                              0, 0, image.width * ratio,
+                              image.height * ratio);
+            updatingImage = false;
+          };
+        });
       },
     });
   </script>
