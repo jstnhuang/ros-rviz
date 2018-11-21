@@ -9,7 +9,6 @@
 <dom-module id="ros-rviz-image">
   <template>
     <paper-input label="Image topic" value="{{topic}}"></paper-input>
-    <paper-checkbox checked="{{continuous}}">Continuously update</paper-checkbox>
     <paper-dropdown-menu id="transport_hints_list" label="Transport hints" on-iron-select="transportHintSelected">
       <paper-listbox slot="dropdown-content" class="dropdown-content" selected="0">
         <paper-item>Compressed</paper-item>
@@ -37,11 +36,6 @@
           value: '/camera/image/compressed',
           notify: true,
         },
-        continuous: {
-          type: Boolean,
-          value: true,
-          notify: true,
-        },
         image_source: {
           type: String,
           value: '',
@@ -59,7 +53,7 @@
       },
 
       observers: [
-        '_optionsChanged(viewer, topic, continuous, ros)',
+        '_optionsChanged(viewer, topic, ros)',
       ],
 
       transportHintSelected: function(e) {
@@ -86,7 +80,7 @@
         }
       },
 
-      _optionsChanged: function(viewer, topic, continuous, ros) {
+      _optionsChanged: function(viewer, topic, ros) {
         this.hide();
         this._updateDisplay();
         this.show();
@@ -97,7 +91,6 @@
         var that = this;
 
         if (!(this.ros && this.viewer && this.topic &&
-             (this.continuous || this.continuous === false) &&
              (this.transport_hints))) {
           return;
         }
