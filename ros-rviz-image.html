@@ -14,7 +14,11 @@
         <paper-item>CompressedDepth</paper-item>
       </paper-listbox>
     </paper-dropdown-menu>
-    <canvas id="xy_image" width="280px;" height="280px;"/>
+    <div style="position: relative;">
+      <div id="canvas_div" style="position: fixed; z-index: 9; border: 1px solid; background-color: black;">
+        <canvas id="xy_image" width="280px;" height="280px;"/>
+      </div>
+    </div>
   </template>
   <script>
     const _transportHints = {
@@ -53,6 +57,11 @@
       transportHintSelected: function(e) {
         this.transport_hints = this.$.transport_hints_dropdown.selectedItemLabel;
         this._optionsChanged();
+      },
+
+      ready: function() {
+        // Make the image DIV draggable.
+        this._dragImageDiv(this.$.canvas_div);
       },
 
       destroy: function() {
@@ -109,17 +118,56 @@
           let image = new Image();
           image.src = "data:image/jpg;base64," + message.data;
           image.onload = function() {
+            // Resize keeping ratio and center the image on the canvas.
             const hRatio = canvas.width / image.width;
             const vRatio = canvas.height / image.height;
-            const ratio  = Math.min (hRatio, vRatio);
-            context.drawImage(image, 0, 0,
-                              image.width, image.height,
-                              0, 0, image.width * ratio,
-                              image.height * ratio);
+            const ratio  = Math.min(hRatio, vRatio);
+            const centerShift_x = (canvas.width - image.width * ratio ) / 2;
+            const centerShift_y = (canvas.height - image.height * ratio ) / 2;
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.drawImage(image, 0, 0, image.width, image.height,
+                              centerShift_x, centerShift_y,
+                              image.width * ratio, image.height * ratio);
             updatingImage = false;
           };
         });
       },
+
+      _dragImageDiv: function(imageDiv) {
+        // Reference: https://www.w3schools.com/howto/howto_js_draggable.asp.
+        var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        imageDiv.onmousedown = dragMouseDown;
+
+        function dragMouseDown(e) {
+          e = e || window.event;
+          e.preventDefault();
+          // Get the mouse cursor position at startup:
+          pos3 = e.clientX;
+          pos4 = e.clientY;
+          document.onmouseup = closeDragElement;
+          // Call a function whenever the cursor moves:
+          document.onmousemove = elementDrag;
+        }
+
+        function elementDrag(e) {
+          e = e || window.event;
+          e.preventDefault();
+          // Calculate the new cursor position:
+          pos1 = pos3 - e.clientX;
+          pos2 = pos4 - e.clientY;
+          pos3 = e.clientX;
+          pos4 = e.clientY;
+          // Set the element's new position:
+          imageDiv.style.top = (imageDiv.offsetTop - pos2) + "px";
+          imageDiv.style.left = (imageDiv.offsetLeft - pos1) + "px";
+        }
+
+        function closeDragElement() {
+          // Stop moving when mouse button is released.
+          document.onmouseup = null;
+          document.onmousemove = null;
+        }
+    },
     });
   </script>
 </dom-module>
