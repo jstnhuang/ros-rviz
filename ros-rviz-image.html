@@ -72,6 +72,7 @@
         if (this._imageTopic) {
           this._imageTopic.unsubscribe();
           this._imageTopic = null;
+          this.$.canvas_div.style.visibility = 'hidden';
         }
       },
 
@@ -80,6 +81,7 @@
           if (!this._imageTopic) {
             this._updateDisplay();
           }
+          this.$.canvas_div.style.visibility = 'visible';
         }
       },
 
