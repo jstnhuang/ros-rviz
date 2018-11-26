@@ -15,6 +15,7 @@
 <link rel="import" href="ros-rviz-global-options.html">
 <link rel="import" href="ros-rviz-point-cloud-2.html">
 <link rel="import" href="ros-rviz-point-cloud.html">
+<link rel="import" href="ros-rviz-tf.html">
 <link rel="import" href="ros-rviz-urdf.html">
 
 <dom-module id="ros-rviz-display">
@@ -148,6 +149,15 @@
           topic="{{options.topic}}"
           viewer="{{viewer}}"
         ></ros-rviz-point-cloud-2>
+      </template>
+      <template is="dom-if" if="{{_typeIs('tf', type)}}" restamp="true">
+        <ros-rviz-tf id="display"
+          global-options="{{globalOptions}}"
+          is-shown="{{isShown}}"
+          ros="{{ros}}"
+          tf-client="{{tfClient}}"
+          viewer="{{viewer}}"
+        ></ros-rviz-tf>
       </template>
       <template is="dom-if" if="{{_typeIs('urdf', type)}}" restamp="true">
         <ros-rviz-urdf id="display"

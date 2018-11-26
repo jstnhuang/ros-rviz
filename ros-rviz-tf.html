@@ -1,0 +1,189 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-styles/color.html">
+<link rel="import" href="imports.html">
+
+<dom-module id="ros-rviz-tf">
+  <template>
+    <style include="iron-flex iron-flex-alignment"></style>
+    <style>
+      paper-checkbox {
+        display: inline;
+      }
+      paper-icon-button {
+        color: var(--paper-grey-500);
+      }
+      .add-button:hover {
+        color: var(--paper-green-500);
+      }
+      .delete-button:hover {
+        color: var(--paper-red-500);
+      }
+    </style>
+    <template is="dom-repeat" items="[[_tfs]]">
+      <div class="layout horizontal center">
+        <paper-checkbox on-change="_toggleFrame" checked={{item.visible}} value={{item.frame}}>
+          {{item.frame}}
+        </paper-checkbox>
+      </div>
+    </template>
+  </template>
+  <script>
+    Polymer({
+      is: 'ros-rviz-tf',
+
+      properties: {
+        globalOptions: Object,
+        isShown: Boolean,
+        name: {
+          type: String,
+          value: 'TF',
+        },
+        ros: Object,
+        tfClient: Object,
+        viewer: Object,
+        _tfs: {
+          type: Array,
+          value: []
+        },
+        _topic: Object,
+      },
+
+      ready: function() {
+        this._updateDisplay();
+        this.show();
+      },
+
+      destroy: function() {
+        this._tfs = [];
+        this._topic.unsubscribe();
+      },
+
+      hide: function() {
+        if (!this.viewer)
+          return;
+
+        for (var i in this._tfs) {
+          this._toggleTf(i, false);
+        }
+      },
+
+      show: function() {
+        if (!this.viewer)
+          return;
+
+        for (var i in this._tfs) {
+          this._toggleTf(i, true);
+        }
+      },
+
+      _toggleTf: function(index, show) {
+        if (show) {
+          this.viewer.addObject(this._tfs[index].node);
+        }
+        else {
+          this.viewer.scene.remove(this._tfs[index].node);
+        }
+
+        this._tfs[index].visible = show;
+        this.notifyPath('_tfs.' + index + '.visible')
+      },
+
+      _updateDisplay: function() {
+        if (undefined === this._topic) {
+          // TODO(louise): It's not a good idea to subscribe to /tf
+          // find an alternative way of getting the list.
+          this._topic = new ROSLIB.Topic({
+            ros: this.ros,
+            name: '/tf',
+            messageType: 'tf2_msgs/TFMessage',
+          });
+        }
+
+        var that = this;
+        this._topic.subscribe(function(msg) {
+          that._onTf(that, msg);
+        });
+      },
+
+      _onTf: function(that, msg) {
+        for (var t of msg.transforms) {
+          that._addFrame(t.child_frame_id);
+        }
+      },
+
+      _callback: function(that, frame, tf) {
+        // Check if it already exists
+        var tfNode = undefined;
+
+        var t = that._tfs.find(element => element.frame === frame);
+
+        if (undefined !== t)
+          tfNode = t.node;
+
+        // If it doesn't, create it
+        if (undefined === tfNode) {
+          var tfObj = new ROS3D.Axes({
+            shaftRadius: 0.05,
+            headLength: 0.001,
+            headRadius: 0.001
+          });
+          tfObj.scale.set(0.1, 0.1, 0.1);
+
+          tfNode = new ROS3D.SceneNode({
+            frameID: that.globalOptions.fixedFrame,
+            tfClient: that.tfClient,
+            object: tfObj,
+            pose: {
+              position: tf.translation,
+              orientation: tf.rotation
+            }
+          });
+
+          that.push('_tfs', {
+            frame: frame,
+            node: tfNode,
+            visible: true
+           });
+
+          if (that.isShown) {
+            that.viewer.addObject(tfNode);
+          }
+        }
+        else {
+          tfNode.position.set(
+            tf.translation.x,
+            tf.translation.y,
+            tf.translation.z);
+          tfNode.quaternion.set(
+            tf.rotation.x,
+            tf.rotation.y,
+            tf.rotation.z,
+            tf.rotation.w)
+        }
+      },
+
+      _addFrame: function(frame) {
+        that = this;
+        this.tfClient.subscribe(frame, function(tf) {
+          that._callback(that, frame, tf);
+        });
+      },
+
+      _toggleFrame: function(e) {
+        var frame = e.target.value;
+        var show = e.target.checked;
+
+        var index = this._tfs.findIndex(tf => tf.frame === frame);
+
+        if (index < 0)
+          return;
+
+        this._toggleTf(index, show);
+      }
+    });
+  </script>
+</dom-module>
