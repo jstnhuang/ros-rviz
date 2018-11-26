@@ -1,0 +1,175 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-listbox/paper-listbox.html">
+<link rel="import" href="imports.html">
+
+<dom-module id="ros-rviz-image">
+  <template>
+    <paper-input label="Image topic" value="{{topic}}"></paper-input>
+    <paper-dropdown-menu id="transport_hints_dropdown" label="Transport hints" on-iron-select="transportHintSelected">
+      <paper-listbox slot="dropdown-content" class="dropdown-content" selected="0">
+        <paper-item>Compressed</paper-item>
+        <paper-item>CompressedDepth</paper-item>
+      </paper-listbox>
+    </paper-dropdown-menu>
+    <div style="position: relative;">
+      <div id="canvas_div" style="position: fixed; z-index: 9; background-color: transparent;" title="[[topic]]">
+        <canvas id="xy_image" width="280px;" height="280px;"/>
+      </div>
+    </div>
+  </template>
+  <script>
+    const _transportHints = {
+      Compressed: {type: 'sensor_msgs/CompressedImage', topicSuffix: '/compressed'},
+      CompressedDepth: {type: 'sensor_msgs/CompressedImage', topicSuffix: '/compressedDepth'},
+    };
+
+    Polymer({
+      is: 'ros-rviz-image',
+
+      properties: {
+        name: {
+          type: String,
+          value: 'Image',
+        },
+        topic: {
+          type: String,
+          value: '/camera/image',
+          notify: true,
+        },
+        transport_hints: {
+          type: String,
+          value: 'Compressed',
+          notify: true,
+        },
+        globalOptions: Object,
+        isShown: Boolean,
+        ros: Object,
+        viewer: Object,
+      },
+
+      observers: [
+        '_optionsChanged(viewer, topic, ros)',
+      ],
+
+      transportHintSelected: function(e) {
+        this.transport_hints = this.$.transport_hints_dropdown.selectedItemLabel;
+        this._optionsChanged();
+      },
+
+      ready: function() {
+        // Make the image DIV draggable.
+        this._dragImageDiv(this.$.canvas_div);
+      },
+
+      destroy: function() {
+        // Nothing to destroy.
+      },
+
+      hide: function() {
+        if (this._imageTopic) {
+          this._imageTopic.unsubscribe();
+          this._imageTopic = null;
+          this.$.canvas_div.style.visibility = 'hidden';
+        }
+      },
+
+      show: function() {
+        if (this.viewer && this.isShown) {
+          if (!this._imageTopic) {
+            this._updateDisplay();
+          }
+          this.$.canvas_div.style.visibility = 'visible';
+        }
+      },
+
+      _optionsChanged: function(viewer, topic, ros) {
+        this.hide();
+        this._updateDisplay();
+        this.show();
+      },
+
+      _updateDisplay: function(callback) {
+        const that = this;
+        const canvas = this.$.xy_image;
+        const context = canvas.getContext('2d');
+
+        if (!(this.ros && this.viewer && this.topic &&
+             (this.transport_hints))) {
+          return;
+        }
+        if (this._imageTopic) {
+          this._imageTopic.unsubscribe();
+        }
+
+        this._imageTopic = new ROSLIB.Topic({
+            ros : this.ros,
+            name : this.topic + _transportHints[this.transport_hints].topicSuffix,
+            messageType : _transportHints[this.transport_hints].type
+        });
+
+        let updatingImage = false;
+
+        this._imageTopic.subscribe(function(message) {
+          if (updatingImage) {
+            return;   // Drop frame if previous one didn't load yet.
+          }
+          updatingImage = true;
+          let image = new Image();
+          image.src = "data:image/jpg;base64," + message.data;
+          image.onload = function() {
+            // Resize keeping ratio and center the image on the canvas.
+            const hRatio = canvas.width / image.width;
+            const vRatio = canvas.height / image.height;
+            const ratio  = Math.min(hRatio, vRatio);
+            const centerShift_x = (canvas.width - image.width * ratio ) / 2;
+            const centerShift_y = (canvas.height - image.height * ratio ) / 2;
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.drawImage(image, 0, 0, image.width, image.height,
+                              centerShift_x, centerShift_y,
+                              image.width * ratio, image.height * ratio);
+            updatingImage = false;
+          };
+        });
+      },
+
+      _dragImageDiv: function(imageDiv) {
+        // Reference: https://www.w3schools.com/howto/howto_js_draggable.asp.
+        var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        imageDiv.onmousedown = dragMouseDown;
+
+        function dragMouseDown(e) {
+          e = e || window.event;
+          e.preventDefault();
+          // Get the mouse cursor position at startup:
+          pos3 = e.clientX;
+          pos4 = e.clientY;
+          document.onmouseup = closeDragElement;
+          // Call a function whenever the cursor moves:
+          document.onmousemove = elementDrag;
+        }
+
+        function elementDrag(e) {
+          e = e || window.event;
+          e.preventDefault();
+          // Calculate the new cursor position:
+          pos1 = pos3 - e.clientX;
+          pos2 = pos4 - e.clientY;
+          pos3 = e.clientX;
+          pos4 = e.clientY;
+          // Set the element's new position:
+          imageDiv.style.top = (imageDiv.offsetTop - pos2) + "px";
+          imageDiv.style.left = (imageDiv.offsetLeft - pos1) + "px";
+        }
+
+        function closeDragElement() {
+          // Stop moving when mouse button is released.
+          document.onmouseup = null;
+          document.onmousemove = null;
+        }
+    },
+    });
+  </script>
+</dom-module>

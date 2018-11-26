@@ -8,6 +8,7 @@
 <link rel="import" href="imports.html">
 <link rel="import" href="ros-rviz-depth-cloud.html">
 <link rel="import" href="ros-rviz-grid.html">
+<link rel="import" href="ros-rviz-image.html">
 <link rel="import" href="ros-rviz-interactive-markers.html">
 <link rel="import" href="ros-rviz-marker-array.html">
 <link rel="import" href="ros-rviz-markers.html">
@@ -86,6 +87,17 @@
           tf-client="{{tfClient}}"
           viewer="{{viewer}}"
         ></ros-rviz-depth-cloud>
+      </template>
+      <template is="dom-if" if="{{_typeIs('image', type)}}" restamp="true">
+        <ros-rviz-image id="display"
+          global-options="{{globalOptions}}"
+          is-shown="{{isShown}}"
+          param="{{options.param}}"
+          ros="{{ros}}"
+          tf-client="{{tfClient}}"
+          topic="{{options.topic}}"
+          viewer="{{viewer}}"
+        ></ros-rviz-image>
       </template>
       <template is="dom-if" if="{{_typeIs('interactiveMarkers', type)}}" restamp="true">
         <ros-rviz-interactive-markers id="display"
