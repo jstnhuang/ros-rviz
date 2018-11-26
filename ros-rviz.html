@@ -127,6 +127,7 @@ Example:
                   <paper-item on-tap="addOccupancyGrid">Occupancy grid</paper-item>
                   <!--paper-item on-tap="addPointCloud">Point cloud</paper-item-->
                   <paper-item on-tap="addPointCloud2">Point cloud 2</paper-item>
+                  <paper-item on-tap="addTf">TF</paper-item>
                   <paper-item on-tap="addUrdf">Robot model</paper-item>
                 </paper-listbox>
               </paper-menu-button>
@@ -383,6 +384,16 @@ Example:
             size: 0.01,
           },
           type: 'pointCloud2',
+        });
+      },
+
+      addTf: function() {
+        this.push('config.displays', {
+          isShown: true,
+          name: 'TF',
+          options: {
+          },
+          type: 'tf',
         });
       },
 
