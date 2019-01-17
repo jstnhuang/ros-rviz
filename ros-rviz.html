@@ -441,12 +441,29 @@ Example:
       },
 
       _rosChanged: function() {
+        var that = this;
         this._tfClient = new ROSLIB.TFClient({
           ros: this.ros,
           angularThres: 0.01,
           fixedFrame: this.config.globalOptions.fixedFrame,
           transThres: 0.01,
           rate: 10.0
+        });
+
+        this._configParam = new ROSLIB.Param({
+          ros: this.ros,
+          name: '/rvizweb/global_config'
+        });
+
+        this._configParam.get(function(value) {
+          if (value != null) {
+            try {
+              that.$.configText.value = value;
+              that._applyConfigText();
+            } catch (ex) {
+              console.log('Could not load configuration: ', value);
+            }
+          }
         });
       },
 
