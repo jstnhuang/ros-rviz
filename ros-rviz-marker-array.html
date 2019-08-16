@@ -137,9 +137,11 @@
             console.warn('Received marker message with deprecated action identifier "1"');
           }
           else if(message.action === 2) { // "DELETE"
-            that._markers[message.ns + '_' + message.id].unsubscribeTf();
-            that.viewer.scene.remove(that._markers[message.ns + '_' + message.id]);
-            delete that._markers[message.ns + '_' + message.id];
+	    if (that._markers[message.ns + '_' + message.id] !== undefined) {
+              that._markers[message.ns + '_' + message.id].unsubscribeTf();
+              that.viewer.scene.remove(that._markers[message.ns + '_' + message.id]);
+              delete that._markers[message.ns + '_' + message.id];
+	    }
           }
           else if(message.action === 3) { // "DELETE ALL"
             for (var m in that._markers){
