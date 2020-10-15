@@ -1,0 +1,90 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="imports.html">
+
+<dom-module id="ros-rviz-laserscan">
+  <template>
+    <paper-input label="Topic" value="{{topic}}"></paper-input>
+  </template>
+  <script>Polymer({
+  is: 'ros-rviz-laserscan',
+  properties: {
+    name: {
+      type: String,
+      value: 'LaserScan'
+    },
+    topic: {
+      type: String,
+      value: '/scan',
+      notify: true
+    },
+    size: {
+      type: Number,
+      value: 0.01,
+      notify: true
+    },
+    globalOptions: Object,
+    isShown: Boolean,
+    ros: Object,
+    tfClient: Object,
+    viewer: Object,
+    _lasers: Object,
+    _sceneNode: Object
+  },
+  observers: ['_optionsChanged(topic, viewer, ros)'],
+  destroy: function () {
+    if (this._lasers){
+        this._lasers.unsubscribe();
+        this.viewer.scene.remove(this._lasers);
+        delete this._lasers;
+    }
+  },
+  hide: function () {
+    if (this.viewer && this._lasers) {
+      this.viewer.scene.remove(this._sceneNode);
+    }
+    if (this._lasers){
+        this._lasers.unsubscribe();
+        this._lasers = null;
+    }
+  },
+  show: function () {
+    if (this.viewer && this.isShown) {
+        if (!this._lasers) {
+          this._updateDisplay();
+        }
+      }
+  },
+  _optionsChanged: function (topic, viewer, ros) {
+    this.hide();
+
+    this._updateDisplay();
+
+    this.show();
+  },
+  _updateDisplay: function (callback) {
+    if (!(this.ros && this.tfClient && this.topic)) {
+      return;
+    }
+
+    if (this._lasers) {
+      this._lasers.unsubscribe();
+    }
+    this._sceneNode = new ROS3D.SceneNode({
+      frameID: "/map",
+      tfClient: this.tfClient
+    });
+    this._lasers = new ROS3D.LaserScan({
+      ros: this.ros,
+      topic: this.topic,
+      tfClient: this.tfClient,
+      rootObject: this._sceneNode,
+      material: {size: 0.1, color: 0x00ee00}
+    });
+
+    if (this._sceneNode) {
+      this.viewer.scene.add(this._sceneNode);
+    }
+  }
+});</script>
+</dom-module>

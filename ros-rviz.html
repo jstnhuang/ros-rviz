@@ -123,6 +123,7 @@ Example:
                   <paper-item on-tap="addGrid">Grid</paper-item>
                   <paper-item on-tap="addImage">Image</paper-item>
                   <paper-item on-tap="addInteractiveMarkers">Interactive markers</paper-item>
+                  <paper-item on-tap="addLaserScan">LaserScan</paper-item>
                   <paper-item on-tap="addMarkers">Markers</paper-item>
                   <paper-item on-tap="addMarkerArray">Marker array</paper-item>
                   <paper-item on-tap="addOccupancyGrid">Occupancy grid</paper-item>
@@ -323,7 +324,16 @@ Example:
           type: 'interactiveMarkers',
         });
       },
-
+      addLaserScan: function() {
+        this.push('config.displays', {
+          isShown: true,
+          name: 'LaserScan',
+          options: {
+            topic: '/scan',
+          },
+          type: 'laserScan',
+        });
+      },
       addMarkers: function() {
         this.push('config.displays', {
           isShown: true,
@@ -345,7 +355,6 @@ Example:
           type: 'markerArray',
         });
       },
-
       addOccupancyGrid: function() {
         this.push('config.displays', {
           isShown: true,
